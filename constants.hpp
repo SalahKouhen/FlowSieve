@@ -251,7 +251,7 @@ namespace constants
      *   
      * Only results from APPLY_POSTPROCESS will be produced.
      *
-     * If NO_FULL_OUTPUTS and not(APPLY_POSTPROCESS), the no outputs
+     * If NO_FULL_OUTPUTS and not(APPLY_POSTPROCESS), then no outputs
      * at all will be produced, so the code will simply halt immediately.
      *
      * @ingroup constants

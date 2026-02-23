@@ -72,6 +72,10 @@ int main(int argc, char *argv[]) {
                                                                 "Helmholtz_projection.nc",      
                                                                 asked_help,
                                                                 "netCDF file containing streamfunction and potential function."),
+                        &Helm_input_fname_2 = input.getCmdOption("--Helmholtz_input_file_2",
+                                                                "",
+                                                                asked_help,
+                                                                "(REQUIRED) netCDF file containing second streamfunction and potential function for comparison."),
                         &vel_input_fname   = input.getCmdOption("--velocity_input_file",        
                                                                 "vels.nc",                      
                                                                 asked_help,
@@ -169,6 +173,16 @@ int main(int argc, char *argv[]) {
     input.getFilterScales( filter_scales, "--filter_scales", asked_help );
 
     if (asked_help) { return 0; }
+
+    // Validate that both Helmholtz input files are provided
+    if ( Helm_input_fname_2.empty() ) {
+        if (wRank == 0) {
+            fprintf( stderr, "ERROR: --Helmholtz_input_file_2 is required.\n" );
+            fprintf( stderr, "Both Helmholtz input files must be provided to compare them.\n" );
+        }
+        MPI_Finalize();
+        return 1;
+    }
 
     // Print processor assignments
     const int max_threads = omp_get_max_threads();
@@ -353,6 +367,53 @@ int main(int argc, char *argv[]) {
     // If we need it, go ahead an merge the mask across processors now
     if (source_data.use_depth_derivatives and ( source_data.Nprocs_in_depth > 1 )) {
         source_data.gather_mask_across_depth( source_data.mask, source_data.mask_DEPTH );
+    }
+
+    //
+    //// Load the second Helmholtz decomposed field
+    //
+    #if DEBUG >= 1
+    if (wRank == 0) { fprintf(stdout, "Reading in second Helmholtz data for comparison.\n\n"); }
+    #endif
+
+    dataset source_data_2;
+
+    // Share the grid and masks from the first dataset (they should be identical)
+    source_data_2.time       = source_data.time;
+    source_data_2.depth      = source_data.depth;
+    source_data_2.latitude   = source_data.latitude;
+    source_data_2.longitude  = source_data.longitude;
+    source_data_2.mask       = source_data.mask;
+    source_data_2.Ntime      = source_data.Ntime;
+    source_data_2.Ndepth     = source_data.Ndepth;
+    source_data_2.Nlat       = source_data.Nlat;
+    source_data_2.Nlon       = source_data.Nlon;
+    source_data_2.use_depth_derivatives = source_data.use_depth_derivatives;
+    source_data_2.depth_is_elevation    = source_data.depth_is_elevation;
+
+    // Load the toroidal and potential fields from the second file
+    source_data_2.load_variable( "F_potential", pot_field_var_name, Helm_input_fname_2, false, true );
+    source_data_2.load_variable( "F_toroidal",  tor_field_var_name, Helm_input_fname_2, false, true );
+
+    if ( u_r_input_fname == "NONE" ) {
+        // If no u_r provided, just assume it's zero
+        source_data_2.variables["u_r"] = std::vector<double>( source_data_2.variables["F_potential"].size(), 0. );
+        source_data_2.compute_radial_vel = false;
+    } else {
+        source_data_2.load_variable( "u_r",  u_r_field_var_name, u_r_input_fname, false, true );
+        source_data_2.compute_radial_vel = true;
+    }
+
+    // Read in the Helmholtz fields for uiuj (if applicable)
+    if ( constants::COMP_PI_HELMHOLTZ ) {
+        source_data_2.load_variable( "uiuj_F_r",      uiuj_F_r_var_name,      quad_input_fname, false, true );
+        source_data_2.load_variable( "uiuj_F_Phi",    uiuj_F_Phi_var_name,    quad_input_fname, false, true );
+        source_data_2.load_variable( "uiuj_F_Psi",    uiuj_F_Psi_var_name,    quad_input_fname, false, true );
+    }
+
+    if ( constants::COMP_WIND_FORCE ) {
+        source_data_2.load_variable( "wind_tau_Psi", wind_tau_Psi_var_name, wind_input_fname, false, true );
+        source_data_2.load_variable( "wind_tau_Phi", wind_tau_Phi_var_name, wind_input_fname, false, true );
     }
 
     // Now pass the data along to the filtering routines

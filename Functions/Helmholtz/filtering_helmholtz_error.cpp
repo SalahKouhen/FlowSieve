@@ -1800,6 +1800,74 @@ void filtering_helmholtz(
                 dll_filter_vals.push_back( NULL );
             }
 
+            filtered_vals_2.clear();
+
+            // Phi
+            filtered_vals_2.push_back(&F_pot_tmp_2);
+            dl_filter_vals_2.push_back( &dl_Phi_tmp_2 );
+            dll_filter_vals_2.push_back( &dll_Phi_tmp_2 );
+
+            // Psi
+            filtered_vals_2.push_back(&F_tor_tmp_2);
+            dl_filter_vals_2.push_back( &dl_Psi_tmp_2 );
+            dll_filter_vals_2.push_back( &dll_Psi_tmp_2 );
+
+            // u_r
+            if ( source_data_2.compute_radial_vel ) {
+                filtered_vals_2.push_back(&u_r_tmp_2);
+                dl_filter_vals_2.push_back( &dl_ur_tmp_2 );
+                dll_filter_vals_2.push_back( &dll_ur_tmp_2 );
+            }
+            
+            // uiuj
+            if ( constants::COMP_PI_HELMHOLTZ ) {
+                filtered_vals_2.push_back(&uiuj_F_r_tmp_2);
+                filtered_vals_2.push_back(&uiuj_F_Psi_tmp_2);
+                filtered_vals_2.push_back(&uiuj_F_Phi_tmp_2);
+
+                dl_filter_vals_2.push_back( NULL );
+                dl_filter_vals_2.push_back( NULL );
+                dl_filter_vals_2.push_back( NULL );
+
+                dll_filter_vals_2.push_back( NULL );
+                dll_filter_vals_2.push_back( NULL );
+                dll_filter_vals_2.push_back( NULL );
+            }
+
+            filtered_vals_error.clear();
+
+            // Phi
+            filtered_vals_error.push_back(&F_pot_tmp_error);
+            dl_filter_vals_error.push_back( &dl_Phi_tmp_error );
+            dll_filter_vals_error.push_back( &dll_Phi_tmp_error );
+
+            // Psi
+            filtered_vals_error.push_back(&F_tor_tmp_error);
+            dl_filter_vals_error.push_back( &dl_Psi_tmp_error );
+            dll_filter_vals_error.push_back( &dll_Psi_tmp_error );
+
+            // u_r
+            if ( source_data_error.compute_radial_vel ) {
+                filtered_vals_error.push_back(&u_r_tmp_error);
+                dl_filter_vals_error.push_back( &dl_ur_tmp_error );
+                dll_filter_vals_error.push_back( &dll_ur_tmp_error );
+            }
+            
+            // uiuj
+            if ( constants::COMP_PI_HELMHOLTZ ) {
+                filtered_vals_error.push_back(&uiuj_F_r_tmp_error);
+                filtered_vals_error.push_back(&uiuj_F_Psi_tmp_error);
+                filtered_vals_error.push_back(&uiuj_F_Phi_tmp_error);
+
+                dl_filter_vals_error.push_back( NULL );
+                dl_filter_vals_error.push_back( NULL );
+                dl_filter_vals_error.push_back( NULL );
+
+                dll_filter_vals_error.push_back( NULL );
+                dll_filter_vals_error.push_back( NULL );
+                dll_filter_vals_error.push_back( NULL );
+            }
+
             thread_id = omp_get_thread_num();  // thread ID
             num_threads = omp_get_num_threads(); // number of threads
 
@@ -1876,31 +1944,37 @@ void filtering_helmholtz(
                                 filter_fields, source_data, Itime, Idepth, Ilat, Ilon, 
                                 LAT_lb, LAT_ub, scale, filt_use_mask, 
                                 local_kernel, local_dl_kernel, local_dll_kernel );
+                        apply_filter_at_point(  
+                                filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2,
+                                dl_kernel_val, dll_kernel_val,
+                                filter_fields_2, source_data_2, Itime, Idepth, Ilat, Ilon, 
+                                LAT_lb, LAT_ub, scale, filt_use_mask, 
+                                local_kernel, local_dl_kernel, local_dll_kernel );
                         if ( (constants::DO_TIMING) and (thread_id == 0) ) { timing_records.add_to_record(MPI_Wtime() - clock_on, "filter_at_point"); }
 
                         // Store the filtered values in the appropriate arrays
 
                         // Phi
                         coarse_F_pot.at(index) = F_pot_tmp;
-                        dl_coarse_Phi.at(index) = (dl_Phi_tmp - F_pot_tmp) * dl_kernel_val;
-                        dll_coarse_Phi.at(index) = 
-                            ( dll_Phi_tmp - F_pot_tmp ) * dll_kernel_val
-                            - 2 * (dl_Phi_tmp - F_pot_tmp) * pow( dl_kernel_val, 2 );
+                        double dPhi = (dl_Phi_tmp - F_pot_tmp) * dl_kernel_val;
+                        dl_coarse_Phi.at(index) = dPhi;
+                        double ddPhi = ( dll_Phi_tmp - F_pot_tmp ) * dll_kernel_val - 2 * dPhi * dl_kernel_val;
+                        dll_coarse_Phi.at(index) = ddPhi;
 
                         // Psi
                         coarse_F_tor.at(index) = F_tor_tmp;
-                        dl_coarse_Psi.at(index) = (dl_Psi_tmp - F_tor_tmp) * dl_kernel_val;
-                        dll_coarse_Psi.at(index) = 
-                            ( dll_Psi_tmp - F_tor_tmp ) * dll_kernel_val
-                            - 2 * (dl_Psi_tmp - F_tor_tmp) * pow( dl_kernel_val, 2 );
+                        double dPsi = (dl_Psi_tmp - F_tor_tmp) * dl_kernel_val;
+                        dl_coarse_Psi.at(index) = dPsi;
+                        double ddPsi = ( dll_Psi_tmp - F_tor_tmp ) * dll_kernel_val - 2 * dPsi * dl_kernel_val;
+                        dll_coarse_Psi.at(index) = ddPsi;
 
                         // u_r
                         if ( source_data.compute_radial_vel ) {
                             u_r_coarse.at(index) = u_r_tmp;
-                            dl_coarse_u_r.at(index) = (dl_ur_tmp - u_r_tmp) * dl_kernel_val;
-                            dll_coarse_u_r.at(index) = 
-                                ( dll_ur_tmp - u_r_tmp ) * dll_kernel_val
-                                - 2 * (dl_ur_tmp - u_r_tmp) * pow( dl_kernel_val, 2 );
+                            double du_r = (dl_ur_tmp - u_r_tmp) * dl_kernel_val;
+                            dl_coarse_u_r.at(index) = du_r;
+                            double ddu_r = ( dll_ur_tmp - u_r_tmp ) * dll_kernel_val - 2 * du_r * dl_kernel_val;
+                            dll_coarse_u_r.at(index) = ddu_r;
                         }
 
                         if ( constants::COMP_PI_HELMHOLTZ ) {
@@ -1918,6 +1992,55 @@ void filtering_helmholtz(
                             coarse_tau_wind_dot_u_tor.at( index ) = tau_wind_dot_u_tor_tmp;
                             coarse_tau_wind_dot_u_pot.at( index ) = tau_wind_dot_u_pot_tmp;
                             coarse_tau_wind_dot_u_tot.at( index ) = tau_wind_dot_u_tor_tmp + tau_wind_dot_u_pot_tmp;
+                        }
+
+                        // Phi
+                        coarse_F_pot_2.at(index) = F_pot_tmp_2;
+                        double dPhi_2 = (dl_Phi_tmp_2 - F_pot_tmp_2) * dl_kernel_val;
+                        dl_coarse_Phi_2.at(index) = dPhi_2;
+                        double ddPhi_2 = ( dll_Phi_tmp_2 - F_pot_tmp_2 ) * dll_kernel_val - 2 * dPhi_2 * dl_kernel_val;
+                        dll_coarse_Phi_2.at(index) = ddPhi_2;
+
+                        // Psi
+                        coarse_F_tor_2.at(index) = F_tor_tmp_2;
+                        double dPsi_2 = (dl_Psi_tmp_2 - F_tor_tmp_2) * dl_kernel_val;
+                        dl_coarse_Psi_2.at(index) = dPsi_2;
+                        double ddPsi_2 = ( dll_Psi_tmp_2 - F_tor_tmp_2 ) * dll_kernel_val - 2 * dPsi_2 * dl_kernel_val;
+                        dll_coarse_Psi_2.at(index) = ddPsi_2;
+
+                        // u_r
+                        if ( source_data_2.compute_radial_vel ) {
+                            u_r_coarse_2.at(index) = u_r_tmp_2;
+                            double du_r_2 = (dl_ur_tmp_2 - u_r_tmp_2) * dl_kernel_val;
+                            dl_coarse_u_r_2.at(index) = du_r_2;
+                            double ddu_r_2 = ( dll_ur_tmp_2 - u_r_tmp_2 ) * dll_kernel_val - 2 * du_r_2 * dl_kernel_val;
+                            dll_coarse_u_r_2.at(index) = ddu_r_2;
+                        }
+
+                        if ( constants::COMP_PI_HELMHOLTZ ) {
+                            coarse_uiuj_F_r_2.at(  index) = uiuj_F_r_tmp_2;
+                            coarse_uiuj_F_Phi_2.at(index) = uiuj_F_Phi_tmp_2;
+                            if ( ( uiuj_F_Phi_tmp_2 == 0 ) and ( wRank == 0 ) ) {
+                                fprintf( stdout, " bar(F_phi[%'d,%'d]) = 0 (loc val is %'.4g)\n", Ilat, Ilon, uiuj_F_Phi_2.at(index) );
+                            }
+                            coarse_uiuj_F_Psi_2.at(index) = uiuj_F_Psi_tmp_2;
+                        }
+
+                        // Phi
+                        coarse_F_pot_error.at(index) = F_pot_tmp - F_pot_tmp_2;
+                        dl_coarse_Phi_error.at(index) = dPhi - dPhi_2;
+                        dll_coarse_Phi_error.at(index) = ddPhi - ddPhi_2;
+
+                        // Psi
+                        coarse_F_tor_error.at(index) = F_tor_tmp - F_tor_tmp_2;
+                        dl_coarse_Psi_error.at(index) = dPsi - dPsi_2;
+                        dll_coarse_Psi_error.at(index) = ddPsi - ddPsi_2;
+
+                        // u_r
+                        if ( source_data.compute_radial_vel && source_data_2.compute_radial_vel ) {
+                            u_r_coarse_error.at(index) = u_r_tmp - u_r_tmp_2;
+                            dl_coarse_u_r_error.at(index) = du_r - du_r_2;
+                            dll_coarse_u_r_error.at(index) = ddu_r - ddu_r_2;
                         }
 
                         if ( mask.at(index) ) {
@@ -1984,15 +2107,141 @@ void filtering_helmholtz(
 
                             KE_tot_filt.at(index) = 0.5 * constants::rho0 * (uxux_tmp + uyuy_tmp + uzuz_tmp);
 
+                            //
+                            //// Also get (uiuj)_bar_2 from Cartesian velocities
+                            //
+
+                            // tor
+                            apply_filter_at_point_for_quadratics(
+                                    uxux_tmp_2, uxuy_tmp_2, uxuz_tmp_2, uyuy_tmp_2, uyuz_tmp_2, uzuz_tmp_2, vort_ux_tmp_2, vort_uy_tmp_2, vort_uz_tmp_2,
+                                    u_x_tor_2,  u_y_tor_2,  u_z_tor_2, full_vort_tor_r_2, source_data_2, Itime, Idepth, Ilat, Ilon,
+                                    LAT_lb, LAT_ub, scale, local_kernel);
+
+                            ux_ux_tor_2.at(index) = uxux_tmp_2;
+                            ux_uy_tor_2.at(index) = uxuy_tmp_2;
+                            ux_uz_tor_2.at(index) = uxuz_tmp_2;
+                            uy_uy_tor_2.at(index) = uyuy_tmp_2;
+                            uy_uz_tor_2.at(index) = uyuz_tmp_2;
+                            uz_uz_tor_2.at(index) = uzuz_tmp_2;
+
+                            vort_ux_tor_2.at(index) = vort_ux_tmp_2;
+                            vort_uy_tor_2.at(index) = vort_uy_tmp_2;
+                            vort_uz_tor_2.at(index) = vort_uz_tmp_2;
+
+                            KE_tor_filt_2.at(index) = 0.5 * constants::rho0 * (uxux_tmp_2 + uyuy_tmp_2 + uzuz_tmp_2);
+
+                            // pot
+                            apply_filter_at_point_for_quadratics(
+                                    uxux_tmp_2, uxuy_tmp_2, uxuz_tmp_2, uyuy_tmp_2, uyuz_tmp_2, uzuz_tmp_2, vort_ux_tmp_2, vort_uy_tmp_2, vort_uz_tmp_2,
+                                    u_x_pot_2,  u_y_pot_2,  u_z_pot_2, full_vort_pot_r_2, source_data_2, Itime, Idepth, Ilat, Ilon,
+                                    LAT_lb, LAT_ub, scale, local_kernel);
+
+                            ux_ux_pot_2.at(index) = uxux_tmp_2;
+                            ux_uy_pot_2.at(index) = uxuy_tmp_2;
+                            ux_uz_pot_2.at(index) = uxuz_tmp_2;
+                            uy_uy_pot_2.at(index) = uyuy_tmp_2;
+                            uy_uz_pot_2.at(index) = uyuz_tmp_2;
+                            uz_uz_pot_2.at(index) = uzuz_tmp_2;
+
+                            vort_ux_pot_2.at(index) = vort_ux_tmp_2;
+                            vort_uy_pot_2.at(index) = vort_uy_tmp_2;
+                            vort_uz_pot_2.at(index) = vort_uz_tmp_2;
+
+                            KE_pot_filt_2.at(index) = 0.5 * constants::rho0 * (uxux_tmp_2 + uyuy_tmp_2 + uzuz_tmp_2);
+
+                            // tot
+                            apply_filter_at_point_for_quadratics(
+                                    uxux_tmp_2, uxuy_tmp_2, uxuz_tmp_2, uyuy_tmp_2, uyuz_tmp_2, uzuz_tmp_2, vort_ux_tmp_2, vort_uy_tmp_2, vort_uz_tmp_2,
+                                    u_x_tot_2,  u_y_tot_2,  u_z_tot_2, full_vort_tot_r_2, source_data_2, Itime, Idepth, Ilat, Ilon,
+                                    LAT_lb, LAT_ub, scale, local_kernel);
+
+                            ux_ux_tot_2.at(index) = uxux_tmp_2;
+                            ux_uy_tot_2.at(index) = uxuy_tmp_2;
+                            ux_uz_tot_2.at(index) = uxuz_tmp_2;
+                            uy_uy_tot_2.at(index) = uyuy_tmp_2;
+                            uy_uz_tot_2.at(index) = uyuz_tmp_2;
+                            uz_uz_tot_2.at(index) = uzuz_tmp_2;
+
+                            vort_ux_tot_2.at(index) = vort_ux_tmp_2;
+                            vort_uy_tot_2.at(index) = vort_uy_tmp_2;
+                            vort_uz_tot_2.at(index) = vort_uz_tmp_2;
+
+                            KE_tot_filt_2.at(index) = 0.5 * constants::rho0 * (uxux_tmp_2 + uyuy_tmp_2 + uzuz_tmp_2);
+
                             if ( (constants::DO_TIMING) and (thread_id == 0) ) { 
                                 timing_records.add_to_record(MPI_Wtime() - clock_on, "filter_at_point_for_quadratics"); 
                             }
+
+                            //
+                            //// Also get (uiuj)_bar_error from Cartesian velocities, note (uiuj)_bar_error = (eiej)_bar I'm doing it this way to try and minimise typos
+                            //
+
+                            // tor
+                            apply_filter_at_point_for_quadratics(
+                                    uxux_tmp_error, uxuy_tmp_error, uxuz_tmp_error, uyuy_tmp_error, uyuz_tmp_error, uzuz_tmp_error, vort_ux_tmp_error, vort_uy_tmp_error, vort_uz_tmp_error,
+                                    u_x_tor_error,  u_y_tor_error,  u_z_tor_error, full_vort_tor_r_error, source_data, Itime, Idepth, Ilat, Ilon,
+                                    LAT_lb, LAT_ub, scale, local_kernel);
+
+                            ux_ux_tor_error.at(index) = uxux_tmp_error;
+                            ux_uy_tor_error.at(index) = uxuy_tmp_error;
+                            ux_uz_tor_error.at(index) = uxuz_tmp_error;
+                            uy_uy_tor_error.at(index) = uyuy_tmp_error;
+                            uy_uz_tor_error.at(index) = uyuz_tmp_error;
+                            uz_uz_tor_error.at(index) = uzuz_tmp_error;
+
+                            vort_ux_tor_error.at(index) = vort_ux_tmp_error;
+                            vort_uy_tor_error.at(index) = vort_uy_tmp_error;
+                            vort_uz_tor_error.at(index) = vort_uz_tmp_error;
+
+                            KE_tor_filt_error.at(index) = 0.5 * constants::rho0 * (uxux_tmp_error + uyuy_tmp_error + uzuz_tmp_error);
+
+                            // pot
+                            apply_filter_at_point_for_quadratics(
+                                    uxux_tmp_error, uxuy_tmp_error, uxuz_tmp_error, uyuy_tmp_error, uyuz_tmp_error, uzuz_tmp_error, vort_ux_tmp_error, vort_uy_tmp_error, vort_uz_tmp_error,
+                                    u_x_pot_error,  u_y_pot_error,  u_z_pot_error, full_vort_pot_r_error, source_data, Itime, Idepth, Ilat, Ilon,
+                                    LAT_lb, LAT_ub, scale, local_kernel);
+
+                            ux_ux_pot_error.at(index) = uxux_tmp_error;
+                            ux_uy_pot_error.at(index) = uxuy_tmp_error;
+                            ux_uz_pot_error.at(index) = uxuz_tmp_error;
+                            uy_uy_pot_error.at(index) = uyuy_tmp_error;
+                            uy_uz_pot_error.at(index) = uyuz_tmp_error;
+                            uz_uz_pot_error.at(index) = uzuz_tmp_error;
+
+                            vort_ux_pot_error.at(index) = vort_ux_tmp_error;
+                            vort_uy_pot_error.at(index) = vort_uy_tmp_error;
+                            vort_uz_pot_error.at(index) = vort_uz_tmp_error;
+
+                            KE_pot_filt_error.at(index) = 0.5 * constants::rho0 * (uxux_tmp_error + uyuy_tmp_error + uzuz_tmp_error);
+
+                            // tot
+                            apply_filter_at_point_for_quadratics(
+                                    uxux_tmp_error, uxuy_tmp_error, uxuz_tmp_error, uyuy_tmp_error, uyuz_tmp_error, uzuz_tmp_error, vort_ux_tmp_error, vort_uy_tmp_error, vort_uz_tmp_error,
+                                    u_x_tot_error,  u_y_tot_error,  u_z_tot_error, full_vort_tot_r_error, source_data, Itime, Idepth, Ilat, Ilon,
+                                    LAT_lb, LAT_ub, scale, local_kernel);
+
+                            ux_ux_tot_error.at(index) = uxux_tmp_error;
+                            ux_uy_tot_error.at(index) = uxuy_tmp_error;
+                            ux_uz_tot_error.at(index) = uxuz_tmp_error;
+                            uy_uy_tot_error.at(index) = uyuy_tmp_error;
+                            uy_uz_tot_error.at(index) = uyuz_tmp_error;
+                            uz_uz_tot_error.at(index) = uzuz_tmp_error;
+
+                            vort_ux_tot_error.at(index) = vort_ux_tmp_error;
+                            vort_uy_tot_error.at(index) = vort_uy_tmp_error;
+                            vort_uz_tot_error.at(index) = vort_uz_tmp_error;
+
+                            KE_tot_filt_error.at(index) = 0.5 * constants::rho0 * (uxux_tmp_error + uyuy_tmp_error + uzuz_tmp_error);
 
                         }  // end if(masked) block
                     }  // end for(depth) block
                 }  // end for(time) block
             }  // end for(latitude-longitude) block
         }  // end pragma parallel block
+
+
+
+
         #if DEBUG >= 0
         if (wRank == 0) { fprintf(stdout, "\n"); }
         #endif
@@ -2009,10 +2258,20 @@ void filtering_helmholtz(
             write_field_to_output(coarse_F_tor, "coarse_F_tor", starts, counts, fname, NULL);
             write_field_to_output(coarse_F_pot, "coarse_F_pot", starts, counts, fname, NULL);
 
+            write_field_to_output(coarse_F_tor_2, "coarse_F_tor_2", starts, counts, fname, NULL);
+            write_field_to_output(coarse_F_pot_2, "coarse_F_pot_2", starts, counts, fname, NULL);
+
+            write_field_to_output(coarse_F_tor_error, "coarse_F_tor_error", starts, counts, fname, NULL);
+            write_field_to_output(coarse_F_pot_error, "coarse_F_pot_error", starts, counts, fname, NULL);
+
             if ( constants::COMP_PI_HELMHOLTZ ) {
                 write_field_to_output(coarse_uiuj_F_r,   "coarse_uiuj_F_r",   starts, counts, fname, NULL);
                 write_field_to_output(coarse_uiuj_F_Phi, "coarse_uiuj_F_Phi", starts, counts, fname, NULL);
                 write_field_to_output(coarse_uiuj_F_Psi, "coarse_uiuj_F_Psi", starts, counts, fname, NULL);
+
+                write_field_to_output(coarse_uiuj_F_r_2,   "coarse_uiuj_F_r_2",   starts, counts, fname, NULL);
+                write_field_to_output(coarse_uiuj_F_Phi_2, "coarse_uiuj_F_Phi_2", starts, counts, fname, NULL);
+                write_field_to_output(coarse_uiuj_F_Psi_2, "coarse_uiuj_F_Psi_2", starts, counts, fname, NULL);
             }
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "writing");  }
         }
@@ -2022,9 +2281,17 @@ void filtering_helmholtz(
         toroidal_vel_from_F( u_lon_tor, u_lat_tor, coarse_F_tor, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
         potential_vel_from_F(u_lon_pot, u_lat_pot, coarse_F_pot, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
 
+        toroidal_vel_from_F( u_lon_tor_2, u_lat_tor_2, coarse_F_tor_2, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
+        potential_vel_from_F(u_lon_pot_2, u_lat_pot_2, coarse_F_pot_2, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
+
+        toroidal_vel_from_F( u_lon_tor_error, u_lat_tor_error, coarse_F_tor_error, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
+        potential_vel_from_F(u_lon_pot_error, u_lat_pot_error, coarse_F_pot_error, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
+
         #pragma omp parallel \
         default( none ) \
-        shared( mask, u_lon_tor, u_lat_tor, u_lon_pot, u_lat_pot, u_lon_tot, u_lat_tot ) \
+        shared( mask, u_lon_tor, u_lat_tor, u_lon_pot, u_lat_pot, u_lon_tot, u_lat_tot, \
+                u_lon_tor_2, u_lat_tor_2, u_lon_pot_2, u_lat_pot_2, u_lon_tot_2, u_lat_tot_2, \
+                u_lon_tor_error, u_lat_tor_error, u_lon_pot_error, u_lat_pot_error, u_lon_tot_error, u_lat_tot_error ) \
         private( index )
         {
             #pragma omp for collapse(1) schedule(guided)
@@ -2032,6 +2299,12 @@ void filtering_helmholtz(
                 if ( mask.at(index) ) {
                     u_lon_tot.at(index) = u_lon_tor.at(index) + u_lon_pot.at(index);
                     u_lat_tot.at(index) = u_lat_tor.at(index) + u_lat_pot.at(index);
+
+                    u_lon_tot_2.at(index) = u_lon_tor_2.at(index) + u_lon_pot_2.at(index);
+                    u_lat_tot_2.at(index) = u_lat_tor_2.at(index) + u_lat_pot_2.at(index);
+
+                    u_lon_tot_error.at(index) = u_lon_tor_error.at(index) + u_lon_pot_error.at(index);
+                    u_lat_tot_error.at(index) = u_lat_tor_error.at(index) + u_lat_pot_error.at(index);
                 }
             }
         }
@@ -2042,6 +2315,15 @@ void filtering_helmholtz(
         vel_Spher_to_Cart( u_x_tor_coarse, u_y_tor_coarse, u_z_tor_coarse, zero_array, u_lon_tor, u_lat_tor, source_data );
         vel_Spher_to_Cart( u_x_pot_coarse, u_y_pot_coarse, u_z_pot_coarse, u_r_coarse, u_lon_pot, u_lat_pot, source_data );
         vel_Spher_to_Cart( u_x_tot_coarse, u_y_tot_coarse, u_z_tot_coarse, u_r_coarse, u_lon_tot, u_lat_tot, source_data );
+
+        vel_Spher_to_Cart( u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, zero_array, u_lon_tor_2, u_lat_tor_2, source_data_2 );
+        vel_Spher_to_Cart( u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, u_r_coarse_2, u_lon_pot_2, u_lat_pot_2, source_data_2 );
+        vel_Spher_to_Cart( u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, u_r_coarse_2, u_lon_tot_2, u_lat_tot_2, source_data_2 );
+
+        vel_Spher_to_Cart( u_x_tor_coarse_error, u_y_tor_coarse_error, u_z_tor_coarse_error, zero_array, u_lon_tor_error, u_lat_tor_error, source_data_error );
+        vel_Spher_to_Cart( u_x_pot_coarse_error, u_y_pot_coarse_error, u_z_pot_coarse_error, u_r_coarse_error, u_lon_pot_error, u_lat_pot_error, source_data_error );
+        vel_Spher_to_Cart( u_x_tot_coarse_error, u_y_tot_coarse_error, u_z_tot_coarse_error, u_r_coarse_error, u_lon_tot_error, u_lat_tot_error, source_data_error );
+
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "Sphere to Cart Conversion"); }
 
         if (not(constants::NO_FULL_OUTPUTS)) {
@@ -2055,6 +2337,27 @@ void filtering_helmholtz(
             if ( source_data.compute_radial_vel ) {
                 write_field_to_output(u_r_coarse, "u_r", starts, counts, fname, NULL);
             }
+
+            write_field_to_output(u_lon_tor_2, "u_lon_tor_2", starts, counts, fname, &mask);
+            write_field_to_output(u_lat_tor_2, "u_lat_tor_2", starts, counts, fname, &mask);
+
+            write_field_to_output(u_lon_pot_2, "u_lon_pot_2", starts, counts, fname, &mask);
+            write_field_to_output(u_lat_pot_2, "u_lat_pot_2", starts, counts, fname, &mask);
+
+            if ( source_data_2.compute_radial_vel ) {
+                write_field_to_output(u_r_coarse_2, "u_r_2", starts, counts, fname, NULL);
+            }
+
+            write_field_to_output(u_lon_tor_error, "u_lon_tor_error", starts, counts, fname, &mask);
+            write_field_to_output(u_lat_tor_error, "u_lat_tor_error", starts, counts, fname, &mask);
+
+            write_field_to_output(u_lon_pot_error, "u_lon_pot_error", starts, counts, fname, &mask);
+            write_field_to_output(u_lat_pot_error, "u_lat_pot_error", starts, counts, fname, &mask);
+
+            if ( source_data.compute_radial_vel ) {
+                write_field_to_output(u_r_coarse_error, "u_r_error", starts, counts, fname, NULL);
+            }
+
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "writing");  }
         }
 
@@ -2069,6 +2372,29 @@ void filtering_helmholtz(
                 dll_coarse_Phi, dll_coarse_Psi,
                 source_data, scale
                 );
+
+        compute_KE_spectra_and_slopes( 
+                u_spectrum_tot_2, u_spectrum_tor_2, u_spectrum_pot_2,
+                v_spectrum_tot_2, v_spectrum_tor_2, v_spectrum_pot_2,
+                spec_slope_tot_2, spec_slope_tor_2, spec_slope_pot_2,
+                u_lon_tot_2, u_lon_tor_2, u_lon_pot_2,
+                u_lat_tot_2, u_lat_tor_2, u_lat_pot_2,
+                dl_coarse_Phi_2, dl_coarse_Psi_2,
+                dll_coarse_Phi_2, dll_coarse_Psi_2,
+                source_data_2, scale
+                );
+
+        compute_KE_spectra_and_slopes( 
+                u_spectrum_tot_error, u_spectrum_tor_error, u_spectrum_pot_error,
+                v_spectrum_tot_error, v_spectrum_tor_error, v_spectrum_pot_error,
+                spec_slope_tot_error, spec_slope_tor_error, spec_slope_pot_error,
+                u_lon_tot_error, u_lon_tor_error, u_lon_pot_error,
+                u_lat_tot_error, u_lat_tor_error, u_lat_pot_error,
+                dl_coarse_Phi_error, dl_coarse_Psi_error,
+                dll_coarse_Phi_error, dll_coarse_Psi_error,
+                source_data, scale
+                );
+
         if (not(constants::NO_FULL_OUTPUTS)) {
             if (constants::DO_TIMING) { clock_on = MPI_Wtime(); }
 
@@ -2085,18 +2411,56 @@ void filtering_helmholtz(
             write_field_to_output( spec_slope_tor, "KE_spectral_slope_tor", starts, counts, fname, &mask);
             write_field_to_output( spec_slope_pot, "KE_spectral_slope_pot", starts, counts, fname, &mask);
 
+            // Field 2
+
+            write_field_to_output( u_spectrum_tot_2, "u_spectrum_tot_2", starts, counts, fname, &mask);
+            write_field_to_output( v_spectrum_tot_2, "v_spectrum_tot_2", starts, counts, fname, &mask);
+
+            write_field_to_output( u_spectrum_tor_2, "u_spectrum_tor_2", starts, counts, fname, &mask);
+            write_field_to_output( v_spectrum_tor_2, "v_spectrum_tor_2", starts, counts, fname, &mask);
+
+            write_field_to_output( u_spectrum_pot_2, "u_spectrum_pot_2", starts, counts, fname, &mask);
+            write_field_to_output( v_spectrum_pot_2, "v_spectrum_pot_2", starts, counts, fname, &mask);
+
+            write_field_to_output( spec_slope_tot_2, "KE_spectral_slope_tot_2", starts, counts, fname, &mask);
+            write_field_to_output( spec_slope_tor_2, "KE_spectral_slope_tor_2", starts, counts, fname, &mask);
+            write_field_to_output( spec_slope_pot_2, "KE_spectral_slope_pot_2", starts, counts, fname, &mask);
+
+            // Error
+
+            write_field_to_output( u_spectrum_tot_error, "u_spectrum_tot_error", starts, counts, fname, &mask);
+            write_field_to_output( v_spectrum_tot_error, "v_spectrum_tot_error", starts, counts, fname, &mask);
+
+            write_field_to_output( u_spectrum_tor_error, "u_spectrum_tor_error", starts, counts, fname, &mask);
+            write_field_to_output( v_spectrum_tor_error, "v_spectrum_tor_error", starts, counts, fname, &mask);
+
+            write_field_to_output( u_spectrum_pot_error, "u_spectrum_pot_error", starts, counts, fname, &mask);
+            write_field_to_output( v_spectrum_pot_error, "v_spectrum_pot_error", starts, counts, fname, &mask);
+
+            write_field_to_output( spec_slope_tot_error, "KE_spectral_slope_tot_error", starts, counts, fname, &mask);
+            write_field_to_output( spec_slope_tor_error, "KE_spectral_slope_tor_error", starts, counts, fname, &mask);
+            write_field_to_output( spec_slope_pot_error, "KE_spectral_slope_pot_error", starts, counts, fname, &mask);
+
+
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "writing");  }
         }
 
         // Get uiuj from corresponding Helmholtz
         if ( constants::COMP_PI_HELMHOLTZ ) {
             uiuj_from_Helmholtz( ulon_ulon, ulon_ulat, ulat_ulat, coarse_uiuj_F_r, coarse_uiuj_F_Phi, coarse_uiuj_F_Psi, source_data );
+            uiuj_from_Helmholtz( ulon_ulon_2, ulon_ulat_2, ulat_ulat_2, coarse_uiuj_F_r_2, coarse_uiuj_F_Phi_2, coarse_uiuj_F_Psi_2, source_data_2 );
 
             if (not(constants::MINIMAL_OUTPUT)) {
                 if (constants::DO_TIMING) { clock_on = MPI_Wtime(); }
                 write_field_to_output( ulon_ulon, "coarse_uu", starts, counts, fname, &mask );
                 write_field_to_output( ulon_ulat, "coarse_uv", starts, counts, fname, &mask );
                 write_field_to_output( ulat_ulat, "coarse_vv", starts, counts, fname, &mask );
+                
+                // Field 2
+
+                write_field_to_output( ulon_ulon_2, "coarse_uu_2", starts, counts, fname, &mask );
+                write_field_to_output( ulon_ulat_2, "coarse_uv_2", starts, counts, fname, &mask );
+                write_field_to_output( ulat_ulat_2, "coarse_vv_2", starts, counts, fname, &mask );
                 if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "writing");  }
             }
         }
@@ -2117,6 +2481,41 @@ void filtering_helmholtz(
                 vort_tot_r, null_vector, null_vector, div_tot, OkuboWeiss_tot,
                 null_vector, null_vector, null_vector, null_vector,
                 source_data, u_r_coarse, u_lon_tot, u_lat_tot);
+
+        // Field 2
+
+        compute_vorticity(
+                vort_tor_r_2, null_vector, null_vector, div_tor_2, OkuboWeiss_tor_2, 
+                null_vector, null_vector, null_vector, null_vector,
+                source_data_2, zero_array, u_lon_tor_2, u_lat_tor_2);
+
+        compute_vorticity(
+                vort_pot_r_2, null_vector, null_vector, div_pot_2, OkuboWeiss_pot_2,
+                null_vector, null_vector, null_vector, null_vector,
+                source_data_2, u_r_coarse_2, u_lon_pot_2, u_lat_pot_2);
+
+        compute_vorticity(
+                vort_tot_r_2, null_vector, null_vector, div_tot_2, OkuboWeiss_tot_2,
+                null_vector, null_vector, null_vector, null_vector,
+                source_data_2, u_r_coarse_2, u_lon_tot_2, u_lat_tot_2);
+
+        // Error
+
+        compute_vorticity(
+                vort_tor_r_error, null_vector, null_vector, div_tor_error, OkuboWeiss_tor_error, 
+                null_vector, null_vector, null_vector, null_vector,
+                source_data_error, zero_array, u_lon_tor_error, u_lat_tor_error);
+
+        compute_vorticity(
+                vort_pot_r_error, null_vector, null_vector, div_pot_error, OkuboWeiss_pot_error,
+                null_vector, null_vector, null_vector, null_vector,
+                source_data_error, u_r_coarse_error, u_lon_pot_error, u_lat_pot_error);
+
+        compute_vorticity(
+                vort_tot_r_error, null_vector, null_vector, div_tot_error, OkuboWeiss_tot_error,
+                null_vector, null_vector, null_vector, null_vector,
+                source_data_error, u_r_coarse_error, u_lon_tot_error, u_lat_tot_error);
+
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute vorticity"); }
 
         if (not(constants::MINIMAL_OUTPUT)) {
@@ -2125,10 +2524,35 @@ void filtering_helmholtz(
             write_field_to_output(div_pot, "div_pot", starts, counts, fname, &mask);
             write_field_to_output(div_tot, "div_tot", starts, counts, fname, &mask);
 
+            // Field 2
+
+            write_field_to_output(div_tor_2, "div_tor_2", starts, counts, fname, &mask);
+            write_field_to_output(div_pot_2, "div_pot_2", starts, counts, fname, &mask);
+            write_field_to_output(div_tot_2, "div_tot_2", starts, counts, fname, &mask);
+
+            // Error
+
+            write_field_to_output(div_tor_error, "div_tor_error", starts, counts, fname, &mask);
+            write_field_to_output(div_pot_error, "div_pot_error", starts, counts, fname, &mask);
+            write_field_to_output(div_tot_error, "div_tot_error", starts, counts, fname, &mask);
+
+
             if (constants::DO_OKUBOWEISS_ANALYSIS) {
                 write_field_to_output(OkuboWeiss_tor, "OkuboWeiss_tor", starts, counts, fname, &mask);
                 write_field_to_output(OkuboWeiss_pot, "OkuboWeiss_pot", starts, counts, fname, &mask);
                 write_field_to_output(OkuboWeiss_tot, "OkuboWeiss_tot", starts, counts, fname, &mask);
+
+                // Field 2
+
+                write_field_to_output(OkuboWeiss_tor_2, "OkuboWeiss_tor_2", starts, counts, fname, &mask);
+                write_field_to_output(OkuboWeiss_pot_2, "OkuboWeiss_pot_2", starts, counts, fname, &mask);
+                write_field_to_output(OkuboWeiss_tot_2, "OkuboWeiss_tot_2", starts, counts, fname, &mask);  
+
+                // Error    
+
+                write_field_to_output(OkuboWeiss_tor_error, "OkuboWeiss_tor_error", starts, counts, fname, &mask);
+                write_field_to_output(OkuboWeiss_pot_error, "OkuboWeiss_pot_error", starts, counts, fname, &mask);
+                write_field_to_output(OkuboWeiss_tot_error, "OkuboWeiss_tot_error", starts, counts, fname, &mask);
             }
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "writing");  }
         }
@@ -2144,6 +2568,10 @@ void filtering_helmholtz(
                             ux_ux_DEPTH, ux_uy_DEPTH, ux_uz_DEPTH, uy_uy_DEPTH, uy_uz_DEPTH, uz_uz_DEPTH,
                             vort_r_DEPTH, vort_ux_DEPTH, vort_uy_DEPTH, vort_uz_DEPTH;
 
+        std::vector<double> u_x_coarse_DEPTH_2, u_y_coarse_DEPTH_2, u_z_coarse_DEPTH_2,
+                            ux_ux_DEPTH_2, ux_uy_DEPTH_2, ux_uz_DEPTH_2, uy_uy_DEPTH_2, uy_uz_DEPTH_2, uz_uz_DEPTH_2,
+                            vort_r_DEPTH_2, vort_ux_DEPTH_2, vort_uy_DEPTH_2, vort_uz_DEPTH_2;
+
         if (constants::DO_TIMING) { clock_on = MPI_Wtime(); }
             // Energy cascade (Pi)
             compute_Pi( Pi_tor, source_data, u_x_tor_coarse, u_y_tor_coarse, u_z_tor_coarse, 
@@ -2152,6 +2580,24 @@ void filtering_helmholtz(
             // Enstrophy cascade (Z)
             compute_Z(  Z_tor, source_data, u_x_tor_coarse, u_y_tor_coarse, u_z_tor_coarse, 
                         vort_tor_r, vort_ux_tor, vort_uy_tor, vort_uz_tor );
+
+            // Field 2
+            compute_Pi( Pi_tor_2, source_data_2, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+                        ux_ux_tor_2, ux_uy_tor_2, ux_uz_tor_2, uy_uy_tor_2, uy_uz_tor_2, uz_uz_tor_2 );
+
+            compute_Z(  Z_tor_2, source_data_2, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+                        vort_tor_r_2, vort_ux_tor_2, vort_uy_tor_2, vort_uz_tor_2 );
+
+            // Error
+
+            compute_Pi_error( Pi_tor_error, source_data, u_x_tor_coarse, u_y_tor_coarse, u_z_tor_coarse, 
+                        ux_ux_tor, ux_uy_tor, ux_uz_tor, uy_uy_tor, uy_uz_tor, uz_uz_tor, 
+                        nullptr, nullptr, nullptr,   // ux_in_tau etc
+                        u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+                        ux_ux_tor_2, ux_uy_tor_2, ux_uz_tor_2, uy_uy_tor_2, uy_uz_tor_2, uz_uz_tor_2, 
+                        nullptr, nullptr, nullptr);   // ux_in_tau_2 etc
+
+
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute_Pi_and_Z"); }
 
         // Energy transport
@@ -2168,6 +2614,19 @@ void filtering_helmholtz(
             source_data.gather_variable_across_depth( uy_uy_tor, uy_uy_DEPTH );
             source_data.gather_variable_across_depth( uy_uz_tor, uy_uz_DEPTH );
             source_data.gather_variable_across_depth( uz_uz_tor, uz_uz_DEPTH );
+
+            // Field 2
+
+            source_data_2.gather_variable_across_depth( u_x_tor_coarse_2, u_x_coarse_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( u_y_tor_coarse_2, u_y_coarse_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( u_z_tor_coarse_2, u_z_coarse_DEPTH_2 );
+
+            source_data_2.gather_variable_across_depth( ux_ux_tor_2, ux_ux_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( ux_uy_tor_2, ux_uy_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( ux_uz_tor_2, ux_uz_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( uy_uy_tor_2, uy_uy_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( uy_uz_tor_2, uy_uz_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( uz_uz_tor_2, uz_uz_DEPTH_2 );
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "MPI_COMM_depth_merging"); }
             if (wRank == 0) { fprintf( stdout, "Merged variables across depth.\n" ); fflush(stdout); }
         }
@@ -2176,9 +2635,15 @@ void filtering_helmholtz(
                 compute_div_transport( div_J_tor, source_data, u_x_coarse_DEPTH, u_y_coarse_DEPTH, u_z_coarse_DEPTH, 
                                        ux_ux_DEPTH, ux_uy_DEPTH, ux_uz_DEPTH, uy_uy_DEPTH, uy_uz_DEPTH, uz_uz_DEPTH, 
                                        zero_array);
+                compute_div_transport( div_J_tor_2, source_data_2, u_x_coarse_DEPTH_2, u_y_coarse_DEPTH_2, u_z_coarse_DEPTH_2, 
+                                       ux_ux_DEPTH_2, ux_uy_DEPTH_2, ux_uz_DEPTH_2, uy_uy_DEPTH_2, uy_uz_DEPTH_2, uz_uz_DEPTH_2, 
+                                       zero_array);                                      
             } else {
                 compute_div_transport( div_J_tor, source_data, u_x_tor_coarse, u_y_tor_coarse, u_z_tor_coarse, 
                                        ux_ux_tor, ux_uy_tor, ux_uz_tor, uy_uy_tor, uy_uz_tor, uz_uz_tor, 
+                                       zero_array);
+                compute_div_transport( div_J_tor_2, source_data_2, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+                                       ux_ux_tor_2, ux_uy_tor_2, ux_uz_tor_2, uy_uy_tor_2, uy_uz_tor_2, uz_uz_tor_2, 
                                        zero_array);
             }
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute_transport"); }
@@ -2195,6 +2660,26 @@ void filtering_helmholtz(
             // Enstrophy cascade (Z)
             compute_Z(  Z_pot, source_data, u_x_pot_coarse, u_y_pot_coarse, u_z_pot_coarse, 
                         vort_pot_r, vort_ux_pot, vort_uy_pot, vort_uz_pot );
+
+            // Field 2
+
+            // Energy cascade (Pi)
+            compute_Pi( Pi_pot_2, source_data_2, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+                        ux_ux_pot_2, ux_uy_pot_2, ux_uz_pot_2, uy_uy_pot_2, uy_uz_pot_2, uz_uz_pot_2 );
+
+            // Enstrophy cascade (Z)
+            compute_Z(  Z_pot_2, source_data_2, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+                        vort_pot_r_2, vort_ux_pot_2, vort_uy_pot_2, vort_uz_pot_2 );
+
+            // Error
+
+            compute_Pi_error( Pi_pot_error, source_data, u_x_pot_coarse, u_y_pot_coarse, u_z_pot_coarse, 
+            ux_ux_pot, ux_uy_pot, ux_uz_pot, uy_uy_pot, uy_uz_pot, uz_uz_pot, 
+            nullptr, nullptr, nullptr,   // ux_in_tau etc
+            u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+            ux_ux_pot_2, ux_uy_pot_2, ux_uz_pot_2, uy_uy_pot_2, uy_uz_pot_2, uz_uz_pot_2, 
+            nullptr, nullptr, nullptr);   // ux_in_tau_2 etc
+
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute_Pi_and_Z"); }
 
         // Energy transport
@@ -2211,6 +2696,19 @@ void filtering_helmholtz(
             source_data.gather_variable_across_depth( uy_uy_pot, uy_uy_DEPTH );
             source_data.gather_variable_across_depth( uy_uz_pot, uy_uz_DEPTH );
             source_data.gather_variable_across_depth( uz_uz_pot, uz_uz_DEPTH );
+            
+            // Field 2
+
+            source_data_2.gather_variable_across_depth( u_x_pot_coarse_2, u_x_coarse_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( u_y_pot_coarse_2, u_y_coarse_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( u_z_pot_coarse_2, u_z_coarse_DEPTH_2 );
+
+            source_data_2.gather_variable_across_depth( ux_ux_pot_2, ux_ux_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( ux_uy_pot_2, ux_uy_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( ux_uz_pot_2, ux_uz_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( uy_uy_pot_2, uy_uy_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( uy_uz_pot_2, uy_uz_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( uz_uz_pot_2, uz_uz_DEPTH_2 );
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "MPI_COMM_depth_merging"); }
         }
         if (constants::DO_TIMING) { clock_on = MPI_Wtime(); }
@@ -2218,9 +2716,15 @@ void filtering_helmholtz(
                 compute_div_transport( div_J_pot, source_data, u_x_coarse_DEPTH, u_y_coarse_DEPTH, u_z_coarse_DEPTH, 
                                        ux_ux_DEPTH, ux_uy_DEPTH, ux_uz_DEPTH, uy_uy_DEPTH, uy_uz_DEPTH, uz_uz_DEPTH, 
                                        zero_array);
+                compute_div_transport( div_J_pot_2, source_data_2, u_x_coarse_DEPTH_2, u_y_coarse_DEPTH_2, u_z_coarse_DEPTH_2, 
+                                       ux_ux_DEPTH_2, ux_uy_DEPTH_2, ux_uz_DEPTH_2, uy_uy_DEPTH_2, uy_uz_DEPTH_2, uz_uz_DEPTH_2, 
+                                       zero_array);
             } else {
                 compute_div_transport( div_J_pot, source_data, u_x_pot_coarse, u_y_pot_coarse, u_z_pot_coarse, 
                                        ux_ux_pot, ux_uy_pot, ux_uz_pot, uy_uy_pot, uy_uz_pot, uz_uz_pot, 
+                                       zero_array);
+                compute_div_transport( div_J_pot_2, source_data_2, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+                                       ux_ux_pot_2, ux_uy_pot_2, ux_uz_pot_2, uy_uy_pot_2, uy_uz_pot_2, uz_uz_pot_2, 
                                        zero_array);
             }
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute_transport"); }
@@ -2237,6 +2741,27 @@ void filtering_helmholtz(
             // Enstrophy cascade (Z)
             compute_Z(  Z_tot, source_data, u_x_tot_coarse, u_y_tot_coarse, u_z_tot_coarse, 
                         vort_tot_r, vort_ux_tot, vort_uy_tot, vort_uz_tot );
+
+            // Field 2
+                    
+            // Energy cascade (Pi)
+            compute_Pi( Pi_tot_2, source_data_2, u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
+                        ux_ux_tot_2, ux_uy_tot_2, ux_uz_tot_2, uy_uy_tot_2, uy_uz_tot_2, uz_uz_tot_2 );
+
+            // Enstrophy cascade (Z)
+            compute_Z(  Z_tot_2, source_data_2, u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
+                        vort_tot_r_2, vort_ux_tot_2, vort_uy_tot_2, vort_uz_tot_2 );
+
+            // Error
+
+            compute_Pi_error( Pi_tot_error, source_data, u_x_tot_coarse, u_y_tot_coarse, u_z_tot_coarse, 
+            ux_ux_tot, ux_uy_tot, ux_uz_tot, uy_uy_tot, uy_uz_tot, uz_uz_tot, 
+            nullptr, nullptr, nullptr,   // ux_in_tau etc
+            u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
+            ux_ux_tot_2, ux_uy_tot_2, ux_uz_tot_2, uy_uy_tot_2, uy_uz_tot_2, uz_uz_tot_2, 
+            nullptr, nullptr, nullptr);   // ux_in_tau_2 etc
+
+
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute_Pi_and_Z"); }
 
         // Energy transport
@@ -2253,6 +2778,18 @@ void filtering_helmholtz(
             source_data.gather_variable_across_depth( uy_uy_tot, uy_uy_DEPTH );
             source_data.gather_variable_across_depth( uy_uz_tot, uy_uz_DEPTH );
             source_data.gather_variable_across_depth( uz_uz_tot, uz_uz_DEPTH );
+
+            // Field 2
+            source_data_2.gather_variable_across_depth( u_x_tot_coarse_2, u_x_coarse_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( u_y_tot_coarse_2, u_y_coarse_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( u_z_tot_coarse_2, u_z_coarse_DEPTH_2 );
+
+            source_data_2.gather_variable_across_depth( ux_ux_tot_2, ux_ux_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( ux_uy_tot_2, ux_uy_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( ux_uz_tot_2, ux_uz_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( uy_uy_tot_2, uy_uy_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( uy_uz_tot_2, uy_uz_DEPTH_2 );
+            source_data_2.gather_variable_across_depth( uz_uz_tot_2, uz_uz_DEPTH_2 );
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "MPI_COMM_depth_merging"); }
         }
         if (constants::DO_TIMING) { clock_on = MPI_Wtime(); }
@@ -2260,9 +2797,15 @@ void filtering_helmholtz(
                 compute_div_transport( div_J_tot, source_data, u_x_coarse_DEPTH, u_y_coarse_DEPTH, u_z_coarse_DEPTH, 
                                        ux_ux_DEPTH, ux_uy_DEPTH, ux_uz_DEPTH, uy_uy_DEPTH, uy_uz_DEPTH, uz_uz_DEPTH, 
                                        zero_array);
+                compute_div_transport( div_J_tot_2, source_data_2, u_x_coarse_DEPTH_2, u_y_coarse_DEPTH_2, u_z_coarse_DEPTH_2, 
+                                       ux_ux_DEPTH_2, ux_uy_DEPTH_2, ux_uz_DEPTH_2, uy_uy_DEPTH_2, uy_uz_DEPTH_2, uz_uz_DEPTH_2, 
+                                       zero_array);
             } else {
                 compute_div_transport( div_J_tot, source_data, u_x_tot_coarse, u_y_tot_coarse, u_z_tot_coarse, 
                                        ux_ux_tot, ux_uy_tot, ux_uz_tot, uy_uy_tot, uy_uz_tot, uz_uz_tot, 
+                                       zero_array);
+                compute_div_transport( div_J_tot_2, source_data_2, u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
+                                       ux_ux_tot_2, ux_uy_tot_2, ux_uz_tot_2, uy_uy_tot_2, uy_uz_tot_2, uz_uz_tot_2, 
                                        zero_array);
             }
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute_transport"); }
@@ -2285,6 +2828,21 @@ void filtering_helmholtz(
         compute_Pi( Pi_VTT, source_data, u_x_tor_coarse, u_y_tor_coarse, u_z_tor_coarse, 
                 ux_ux_tot, ux_uy_tot, ux_uz_tot, uy_uy_tot, uy_uz_tot, uz_uz_tot,
                 &u_x_tot_coarse, &u_y_tot_coarse, &u_z_tot_coarse );
+
+        // Field 2
+        compute_Pi( Pi_DVV_2, source_data_2, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+                ux_ux_tor_2, ux_uy_tor_2, ux_uz_tor_2, uy_uy_tor_2, uy_uz_tor_2, uz_uz_tor_2,
+                &u_x_tor_coarse_2, &u_y_tor_coarse_2, &u_z_tor_coarse_2 );
+        compute_Pi( Pi_DTT_2, source_data_2, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+                ux_ux_tot_2, ux_uy_tot_2, ux_uz_tot_2, uy_uy_tot_2, uy_uz_tot_2, uz_uz_tot_2,
+                &u_x_tot_coarse_2, &u_y_tot_coarse_2, &u_z_tot_coarse_2 );
+
+        compute_Pi( Pi_VDD_2, source_data_2, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+                ux_ux_pot_2, ux_uy_pot_2, ux_uz_pot_2, uy_uy_pot_2, uy_uz_pot_2, uz_uz_pot_2,
+                &u_x_pot_coarse_2, &u_y_pot_coarse_2, &u_z_pot_coarse_2 );
+        compute_Pi( Pi_VTT_2, source_data_2, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+                ux_ux_tot_2, ux_uy_tot_2, ux_uz_tot_2, uy_uy_tot_2, uy_uz_tot_2, uz_uz_tot_2,
+                &u_x_tot_coarse_2, &u_y_tot_coarse_2, &u_z_tot_coarse_2 );
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute_Pi_and_Z"); }
 
 

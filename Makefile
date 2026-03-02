@@ -217,8 +217,10 @@ $(CORE_TARGET_EXES): %.x : ${CORE_OBJS} ${INTERFACE_OBJS} ${PREPROCESS_OBJS} ${A
 
 # Helmholtz
 HELM_TARGET_EXES := Case_Files/coarse_grain_helmholtz.x  \
+					Case_Files/coarse_grain_helmholtz_error.x  \
 					Case_Files/coarse_grain_scalars.x
 HELM_TARGET_OBJS := Case_Files/coarse_grain_helmholtz.o  \
+					Case_Files/coarse_grain_helmholtz_error.o  \
 					Case_Files/coarse_grain_scalars.o
 
 $(HELM_TARGET_OBJS): %.o : %.cpp constants.hpp

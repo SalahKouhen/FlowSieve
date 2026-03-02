@@ -234,6 +234,13 @@ void filtering_helmholtz(
         const MPI_Comm comm = MPI_COMM_WORLD
         );
 
+void filtering_helmholtz_error(
+        const dataset & source_data,
+        const dataset & source_data_2,
+        const std::vector<double> & scales,
+        const MPI_Comm comm = MPI_COMM_WORLD
+        );
+
 void apply_filter_at_point(
         std::vector<double*> & coarse_vals,   
         std::vector<double*> & dl_coarse_vals,
@@ -320,6 +327,36 @@ void compute_Pi(
         const std::vector<double> * uz_in_tau = NULL,
         const MPI_Comm comm = MPI_COMM_WORLD);
 
+void compute_Pi_error(
+        std::vector<double> & energy_transfer,
+        const dataset & source_data,
+        const std::vector<double> & ux,   
+        const std::vector<double> & uy,   
+        const std::vector<double> & uz,
+        const std::vector<double> & uxux, 
+        const std::vector<double> & uxuy, 
+        const std::vector<double> & uxuz,
+        const std::vector<double> & uyuy, 
+        const std::vector<double> & uyuz, 
+        const std::vector<double> & uzuz,
+        const std::vector<double> * ux_in_tau = NULL,   
+        const std::vector<double> * uy_in_tau = NULL,   
+        const std::vector<double> * uz_in_tau = NULL,
+        const std::vector<double> & ux_2,
+        const std::vector<double> & uy_2,
+        const std::vector<double> & uz_2,
+        const std::vector<double> & uxux_2,
+        const std::vector<double> & uxuy_2,
+        const std::vector<double> & uxuz_2,
+        const std::vector<double> & uyuy_2,
+        const std::vector<double> & uyuz_2,
+        const std::vector<double> & uzuz_2,
+        const std::vector<double> * ux_in_tau_2 = NULL,
+        const std::vector<double> * uy_in_tau_2 = NULL,
+        const std::vector<double> * uz_in_tau_2 = NULL,
+        const MPI_Comm comm = MPI_COMM_WORLD);
+
+
 void compute_Pi_shift_deriv(
         std::vector<double> & energy_transfer,
         const dataset & source_data,
@@ -342,6 +379,22 @@ void compute_Pi_Helmholtz(
         const std::vector<double> & ulon_ulon,
         const std::vector<double> & ulon_ulat,
         const std::vector<double> & ulat_ulat,
+        const MPI_Comm comm = MPI_COMM_WORLD
+        );
+
+void compute_Pi_Helmholtz_error(
+        std::vector<double> & energy_transfer,
+        const dataset & source_data,
+        const std::vector<double> & ulon,
+        const std::vector<double> & ulat,
+        const std::vector<double> & ulon_ulon,
+        const std::vector<double> & ulon_ulat,
+        const std::vector<double> & ulat_ulat,
+        const std::vector<double> & ulon_2,
+        const std::vector<double> & ulat_2,
+        const std::vector<double> & ulon_ulon_2,
+        const std::vector<double> & ulon_ulat_2,
+        const std::vector<double> & ulat_ulat_2,
         const MPI_Comm comm = MPI_COMM_WORLD
         );
 

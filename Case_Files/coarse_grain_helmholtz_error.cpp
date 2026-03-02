@@ -418,7 +418,7 @@ int main(int argc, char *argv[]) {
 
     // Now pass the data along to the filtering routines
     const double pre_filter_time = MPI_Wtime();
-    filtering_helmholtz_error( source_data, filter_scales );
+    filtering_helmholtz_error( source_data, source_data_2, filter_scales );
     const double post_filter_time = MPI_Wtime();
 
     // Done!

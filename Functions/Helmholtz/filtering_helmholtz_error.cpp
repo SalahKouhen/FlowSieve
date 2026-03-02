@@ -2851,6 +2851,9 @@ void filtering_helmholtz(
         //
         if ( constants::COMP_PI_HELMHOLTZ ) {
             compute_Pi_Helmholtz( Pi_Helm, source_data, u_lon_tot, u_lat_tot, ulon_ulon, ulon_ulat, ulat_ulat );
+            compute_Pi_Helmholtz( Pi_Helm_2, source_data_2, u_lon_tot_2, u_lat_tot_2, ulon_ulon_2, ulon_ulat_2, ulat_ulat_2 );
+            compute_Pi_Helmholtz_error( Pi_Helm_error, source_data, u_lon_tot, u_lat_tot, ulon_ulon, ulon_ulat, ulat_ulat,
+                                        u_lon_tot_2, u_lat_tot_2, ulon_ulon_2, ulon_ulat_2, ulat_ulat_2 );
         }
 
         // Writing
@@ -2859,14 +2862,28 @@ void filtering_helmholtz(
             write_field_to_output( Pi_tor, "Pi_tor", starts, counts, fname, &mask);
             write_field_to_output( Pi_pot, "Pi_pot", starts, counts, fname, &mask);
             write_field_to_output( Pi_tot, "Pi_tot", starts, counts, fname, &mask);
+            
+            write_field_to_output( Pi_tor_2, "Pi_tor_2", starts, counts, fname, &mask);
+            write_field_to_output( Pi_pot_2, "Pi_pot_2", starts, counts, fname, &mask);
+            write_field_to_output( Pi_tot_2, "Pi_tot_2", starts, counts, fname, &mask);
+            
+            write_field_to_output( Pi_tor_error, "Pi_tor_error", starts, counts, fname, &mask);
+            write_field_to_output( Pi_pot_error, "Pi_pot_error", starts, counts, fname, &mask);
+            write_field_to_output( Pi_tot_error, "Pi_tot_error", starts, counts, fname, &mask);
 
             if ( constants::COMP_PI_HELMHOLTZ ) {
                 write_field_to_output( Pi_Helm, "Pi_Helm", starts, counts, fname, &mask);
+                write_field_to_output( Pi_Helm_2, "Pi_Helm_2", starts, counts, fname, &mask);
+                write_field_to_output( Pi_Helm_error, "Pi_Helm_error", starts, counts, fname, &mask);
             }
 
             write_field_to_output( Z_tor, "Z_tor", starts, counts, fname, &mask);
             write_field_to_output( Z_pot, "Z_pot", starts, counts, fname, &mask);
             write_field_to_output( Z_tot, "Z_tot", starts, counts, fname, &mask);
+
+            write_field_to_output( Z_tor_2, "Z_tor_2", starts, counts, fname, &mask);
+            write_field_to_output( Z_pot_2, "Z_pot_2", starts, counts, fname, &mask);
+            write_field_to_output( Z_tot_2, "Z_tot_2", starts, counts, fname, &mask);
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "writing");  }
         }
 
@@ -2878,7 +2895,20 @@ void filtering_helmholtz(
                 KE_tot_coarse, KE_tot_fine, KE_tot_filt, KE_tot_fine_mod, KE_tot_orig, \
                 Enst_tor, Enst_pot, Enst_tot, mask, \
                 u_lon_tor, u_lat_tor, u_lon_pot, u_lat_pot, u_lon_tot, u_lat_tot, \
-                vort_tor_r, vort_pot_r, vort_tot_r ) \
+                vort_tor_r, vort_pot_r, vort_tot_r, \
+                KE_tor_coarse_2, KE_tor_fine_2, KE_tor_filt_2, KE_tor_fine_mod_2, KE_tor_orig_2, \
+                KE_pot_coarse_2, KE_pot_fine_2, KE_pot_filt_2, KE_pot_fine_mod_2, KE_pot_orig_2, \
+                KE_tot_coarse_2, KE_tot_fine_2, KE_tot_filt_2, KE_tot_fine_mod_2, KE_tot_orig_2, \
+                Enst_tor_2, Enst_pot_2, Enst_tot_2,  \
+                u_lon_tor_2, u_lat_tor_2, u_lon_pot_2, u_lat_pot_2, u_lon_tot_2, u_lat_tot_2, \
+                vort_tor_r_2, vort_pot_r_2, vort_tot_r_2, \
+                KE_tor_coarse_error, KE_tor_fine_error, KE_tor_filt_error, KE_tor_fine_mod_error, KE_tor_orig_error, \
+                KE_pot_coarse_error, KE_pot_fine_error, KE_pot_filt_error, KE_pot_fine_mod_error, KE_pot_orig_error, \
+                KE_tot_coarse_error, KE_tot_fine_error, KE_tot_filt_error, KE_tot_fine_mod_error, KE_tot_orig_error, \
+                Enst_tor_error, Enst_pot_error, Enst_tot_error,  \
+                u_lon_tor_error, u_lat_tor_error, u_lon_pot_error, u_lat_pot_error, u_lon_tot_error, u_lat_tot_error, \
+                vort_tor_r_error, vort_pot_r_error, vort_tot_r_error \
+            ) \
         private( index )
         {
             #pragma omp for collapse(1) schedule(guided)
@@ -2888,17 +2918,49 @@ void filtering_helmholtz(
                     KE_pot_coarse.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_pot.at(index), 2.) + pow(u_lat_pot.at(index), 2.) );
                     KE_tot_coarse.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tot.at(index), 2.) + pow(u_lat_tot.at(index), 2.) );
 
+                    KE_tor_coarse_2.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tor_2.at(index), 2.) + pow(u_lat_tor_2.at(index), 2.) );
+                    KE_pot_coarse_2.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_pot_2.at(index), 2.) + pow(u_lat_pot_2.at(index), 2.) );
+                    KE_tot_coarse_2.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tot_2.at(index), 2.) + pow(u_lat_tot_2.at(index), 2.) );
+
+                    KE_tor_coarse_error.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tor_error.at(index), 2.) + pow(u_lat_tor_error.at(index), 2.) );
+                    KE_pot_coarse_error.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_pot_error.at(index), 2.) + pow(u_lat_pot_error.at(index), 2.) );
+                    KE_tot_coarse_error.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tot_error.at(index), 2.) + pow(u_lat_tot_error.at(index), 2.) );
+
                     KE_tor_fine.at(index) = KE_tor_filt.at(index) - KE_tor_coarse.at(index);
                     KE_pot_fine.at(index) = KE_pot_filt.at(index) - KE_pot_coarse.at(index);
                     KE_tot_fine.at(index) = KE_tot_filt.at(index) - KE_tot_coarse.at(index);
+
+                    KE_tor_fine_2.at(index) = KE_tor_filt_2.at(index) - KE_tor_coarse_2.at(index);
+                    KE_pot_fine_2.at(index) = KE_pot_filt_2.at(index) - KE_pot_coarse_2.at(index);
+                    KE_tot_fine_2.at(index) = KE_tot_filt_2.at(index) - KE_tot_coarse_2.at(index);
+
+                    KE_tor_fine_error.at(index) = KE_tor_filt_error.at(index) - KE_tor_coarse_error.at(index);
+                    KE_pot_fine_error.at(index) = KE_pot_filt_error.at(index) - KE_pot_coarse_error.at(index);
+                    KE_tot_fine_error.at(index) = KE_tot_filt_error.at(index) - KE_tot_coarse_error.at(index);
 
                     KE_tor_fine_mod.at(index) = KE_tor_orig.at(index) - KE_tor_coarse.at(index);
                     KE_pot_fine_mod.at(index) = KE_pot_orig.at(index) - KE_pot_coarse.at(index);
                     KE_tot_fine_mod.at(index) = KE_tot_orig.at(index) - KE_tot_coarse.at(index);
 
+                    KE_tor_fine_mod_2.at(index) = KE_tor_orig_2.at(index) - KE_tor_coarse_2.at(index);
+                    KE_pot_fine_mod_2.at(index) = KE_pot_orig_2.at(index) - KE_pot_coarse_2.at(index);
+                    KE_tot_fine_mod_2.at(index) = KE_tot_orig_2.at(index) - KE_tot_coarse_2.at(index);
+
+                    KE_tor_fine_mod_error.at(index) = KE_tor_orig_error.at(index) - KE_tor_coarse_error.at(index);
+                    KE_pot_fine_mod_error.at(index) = KE_pot_orig_error.at(index) - KE_pot_coarse_error.at(index);
+                    KE_tot_fine_mod_error.at(index) = KE_tot_orig_error.at(index) - KE_tot_coarse_error.at(index);
+
                     Enst_tor.at(index) = 0.5 * constants::rho0 * ( pow(vort_tor_r.at(index), 2.) );
                     Enst_pot.at(index) = 0.5 * constants::rho0 * ( pow(vort_pot_r.at(index), 2.) );
                     Enst_tot.at(index) = 0.5 * constants::rho0 * ( pow(vort_tot_r.at(index), 2.) );
+
+                    Enst_tor_2.at(index) = 0.5 * constants::rho0 * ( pow(vort_tor_r_2.at(index), 2.) );
+                    Enst_pot_2.at(index) = 0.5 * constants::rho0 * ( pow(vort_pot_r_2.at(index), 2.) );
+                    Enst_tot_2.at(index) = 0.5 * constants::rho0 * ( pow(vort_tot_r_2.at(index), 2.) );
+
+                    Enst_tor_error.at(index) = 0.5 * constants::rho0 * ( pow(vort_tor_r_error.at(index), 2.) );
+                    Enst_pot_error.at(index) = 0.5 * constants::rho0 * ( pow(vort_pot_r_error.at(index), 2.) );
+                    Enst_tot_error.at(index) = 0.5 * constants::rho0 * ( pow(vort_tot_r_error.at(index), 2.) );
                 }
             }
         }
@@ -2910,9 +2972,25 @@ void filtering_helmholtz(
             write_field_to_output( KE_pot_filt, "KE_pot_filt", starts, counts, fname, &mask);
             write_field_to_output( KE_tot_filt, "KE_tot_filt", starts, counts, fname, &mask);
 
+            write_field_to_output( KE_tor_filt_2, "KE_tor_filt_2", starts, counts, fname, &mask);
+            write_field_to_output( KE_pot_filt_2, "KE_pot_filt_2", starts, counts, fname, &mask);
+            write_field_to_output( KE_tot_filt_2, "KE_tot_filt_2", starts, counts, fname, &mask);
+
+            write_field_to_output( KE_tor_filt_error, "KE_tor_filt_error", starts, counts, fname, &mask);
+            write_field_to_output( KE_pot_filt_error, "KE_pot_filt_error", starts, counts, fname, &mask);
+            write_field_to_output( KE_tot_filt_error, "KE_tot_filt_error", starts, counts, fname, &mask);
+
             write_field_to_output( KE_tor_fine, "KE_tor_fine", starts, counts, fname, &mask);
             write_field_to_output( KE_pot_fine, "KE_pot_fine", starts, counts, fname, &mask);
             write_field_to_output( KE_tot_fine, "KE_tot_fine", starts, counts, fname, &mask);
+
+            write_field_to_output( KE_tor_fine_2, "KE_tor_fine_2", starts, counts, fname, &mask);
+            write_field_to_output( KE_pot_fine_2, "KE_pot_fine_2", starts, counts, fname, &mask);
+            write_field_to_output( KE_tot_fine_2, "KE_tot_fine_2", starts, counts, fname, &mask);
+
+            write_field_to_output( KE_tor_fine_error, "KE_tor_fine_error", starts, counts, fname, &mask);
+            write_field_to_output( KE_pot_fine_error, "KE_pot_fine_error", starts, counts, fname, &mask);
+            write_field_to_output( KE_tot_fine_error, "KE_tot_fine_error", starts, counts, fname, &mask);
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "writing");  }
         }
 
@@ -2922,13 +3000,37 @@ void filtering_helmholtz(
             write_field_to_output( KE_pot_fine_mod, "KE_pot_fine_mod", starts, counts, fname, &mask);
             write_field_to_output( KE_tot_fine_mod, "KE_tot_fine_mod", starts, counts, fname, &mask);
 
+            write_field_to_output( KE_tor_fine_mod_2, "KE_tor_fine_mod_2", starts, counts, fname, &mask);
+            write_field_to_output( KE_pot_fine_mod_2, "KE_pot_fine_mod_2", starts, counts, fname, &mask);
+            write_field_to_output( KE_tot_fine_mod_2, "KE_tot_fine_mod_2", starts, counts, fname, &mask);
+
+            write_field_to_output( KE_tor_fine_mod_error, "KE_tor_fine_mod_error", starts, counts, fname, &mask);
+            write_field_to_output( KE_pot_fine_mod_error, "KE_pot_fine_mod_error", starts, counts, fname, &mask);
+            write_field_to_output( KE_tot_fine_mod_error, "KE_tot_fine_mod_error", starts, counts, fname, &mask);
+
             write_field_to_output( Enst_tor, "Enstrophy_tor", starts, counts, fname, &mask);
             write_field_to_output( Enst_pot, "Enstrophy_pot", starts, counts, fname, &mask);
             write_field_to_output( Enst_tot, "Enstrophy_tot", starts, counts, fname, &mask);
 
+            write_field_to_output( Enst_tor_2, "Enstrophy_tor_2", starts, counts, fname, &mask);
+            write_field_to_output( Enst_pot_2, "Enstrophy_pot_2", starts, counts, fname, &mask);
+            write_field_to_output( Enst_tot_2, "Enstrophy_tot_2", starts, counts, fname, &mask);
+
+            write_field_to_output( Enst_tor_error, "Enstrophy_tor_error", starts, counts, fname, &mask);
+            write_field_to_output( Enst_pot_error, "Enstrophy_pot_error", starts, counts, fname, &mask);
+            write_field_to_output( Enst_tot_error, "Enstrophy_tot_error", starts, counts, fname, &mask);
+
             write_field_to_output( vort_tor_r, "vort_r_tor", starts, counts, fname, &mask);
             write_field_to_output( vort_pot_r, "vort_r_pot", starts, counts, fname, &mask);
             write_field_to_output( vort_tot_r, "vort_r_tot", starts, counts, fname, &mask);
+
+            write_field_to_output( vort_tor_r_2, "vort_r_tor_2", starts, counts, fname, &mask);
+            write_field_to_output( vort_pot_r_2, "vort_r_pot_2", starts, counts, fname, &mask);
+            write_field_to_output( vort_tot_r_2, "vort_r_tot_2", starts, counts, fname, &mask);
+
+            write_field_to_output( vort_tor_r_error, "vort_r_tor_error", starts, counts, fname, &mask);
+            write_field_to_output( vort_pot_r_error, "vort_r_pot_error", starts, counts, fname, &mask);
+            write_field_to_output( vort_tot_r_error, "vort_r_tot_error", starts, counts, fname, &mask);
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "writing");  }
         }
         
@@ -2992,6 +3094,12 @@ void filtering_helmholtz(
             shared( spec_slope_tot, u_spectrum_tot, v_spectrum_tot, \
                     spec_slope_pot, u_spectrum_pot, v_spectrum_pot, \
                     spec_slope_tor, u_spectrum_tor, v_spectrum_tor, \
+                    spec_slope_tot_2, u_spectrum_tot_2, v_spectrum_tot_2, \
+                    spec_slope_pot_2, u_spectrum_pot_2, v_spectrum_pot_2, \
+                    spec_slope_tor_2, u_spectrum_tor_2, v_spectrum_tor_2, \
+                    spec_slope_tot_error, u_spectrum_tot_error, v_spectrum_tot_error, \
+                    spec_slope_pot_error, u_spectrum_pot_error, v_spectrum_pot_error, \
+                    spec_slope_tor_error, u_spectrum_tor_error, v_spectrum_tor_error, \
                     mask )
             {
                 #pragma omp for schedule(static)
@@ -3000,6 +3108,12 @@ void filtering_helmholtz(
                         spec_slope_tot.at(index) *= u_spectrum_tot.at(index) + v_spectrum_tot.at(index);
                         spec_slope_pot.at(index) *= u_spectrum_pot.at(index) + v_spectrum_pot.at(index);
                         spec_slope_tor.at(index) *= u_spectrum_tor.at(index) + v_spectrum_tor.at(index);
+                        spec_slope_tot_2.at(index) *= u_spectrum_tot_2.at(index) + v_spectrum_tot_2.at(index);
+                        spec_slope_pot_2.at(index) *= u_spectrum_pot_2.at(index) + v_spectrum_pot_2.at(index);
+                        spec_slope_tor_2.at(index) *= u_spectrum_tor_2.at(index) + v_spectrum_tor_2.at(index);
+                        spec_slope_tot_error.at(index) *= u_spectrum_tot_error.at(index) + v_spectrum_tot_error.at(index);
+                        spec_slope_pot_error.at(index) *= u_spectrum_pot_error.at(index) + v_spectrum_pot_error.at(index);
+                        spec_slope_tor_error.at(index) *= u_spectrum_tor_error.at(index) + v_spectrum_tor_error.at(index);
                     }
                 }
             }
@@ -3020,6 +3134,34 @@ void filtering_helmholtz(
             Apply_Postprocess_Routines(
                     source_data, postprocess_fields_tot, postprocess_names, OkuboWeiss_tot,
                     scales.at(Iscale), timing_records, "postprocess_full");
+
+            // Field 2
+
+            Apply_Postprocess_Routines(
+                    source_data_2, postprocess_fields_tor_2, postprocess_names, OkuboWeiss_tor_2,
+                    scales.at(Iscale), timing_records, "postprocess_toroidal_2");
+            
+            Apply_Postprocess_Routines(
+                    source_data_2, postprocess_fields_pot_2, postprocess_names, OkuboWeiss_pot_2,
+                    scales.at(Iscale), timing_records, "postprocess_potential_2");
+
+            Apply_Postprocess_Routines(
+                    source_data_2, postprocess_fields_tot_2, postprocess_names, OkuboWeiss_tot_2,
+                    scales.at(Iscale), timing_records, "postprocess_full_2");
+
+            // Error
+
+            Apply_Postprocess_Routines(
+                    source_data, postprocess_fields_tor_error, postprocess_names, OkuboWeiss_tor_error,
+                    scales.at(Iscale), timing_records, "postprocess_toroidal_error");
+
+            Apply_Postprocess_Routines(
+                    source_data, postprocess_fields_pot_error, postprocess_names, OkuboWeiss_pot_error,
+                    scales.at(Iscale), timing_records, "postprocess_potential_error");
+
+            Apply_Postprocess_Routines(
+                    source_data, postprocess_fields_tot_error, postprocess_names, OkuboWeiss_tot_error,
+                    scales.at(Iscale), timing_records, "postprocess_full_error");
 
             #if DEBUG >= 1
             if (wRank == 0) { fprintf(stdout, "Finished post-process routines\n"); }

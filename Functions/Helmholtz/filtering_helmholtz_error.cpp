@@ -2592,9 +2592,9 @@ void filtering_helmholtz(
 
             compute_Pi_error( Pi_tor_error, source_data, u_x_tor_coarse, u_y_tor_coarse, u_z_tor_coarse, 
                         ux_ux_tor, ux_uy_tor, ux_uz_tor, uy_uy_tor, uy_uz_tor, uz_uz_tor, 
-                        nullptr, nullptr, nullptr,   // ux_in_tau etc
                         u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
                         ux_ux_tor_2, ux_uy_tor_2, ux_uz_tor_2, uy_uy_tor_2, uy_uz_tor_2, uz_uz_tor_2, 
+                        nullptr, nullptr, nullptr,   // ux_in_tau etc
                         nullptr, nullptr, nullptr);   // ux_in_tau_2 etc
 
 
@@ -2675,9 +2675,9 @@ void filtering_helmholtz(
 
             compute_Pi_error( Pi_pot_error, source_data, u_x_pot_coarse, u_y_pot_coarse, u_z_pot_coarse, 
             ux_ux_pot, ux_uy_pot, ux_uz_pot, uy_uy_pot, uy_uz_pot, uz_uz_pot, 
-            nullptr, nullptr, nullptr,   // ux_in_tau etc
             u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
             ux_ux_pot_2, ux_uy_pot_2, ux_uz_pot_2, uy_uy_pot_2, uy_uz_pot_2, uz_uz_pot_2, 
+            nullptr, nullptr, nullptr,   // ux_in_tau etc
             nullptr, nullptr, nullptr);   // ux_in_tau_2 etc
 
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute_Pi_and_Z"); }
@@ -2756,9 +2756,9 @@ void filtering_helmholtz(
 
             compute_Pi_error( Pi_tot_error, source_data, u_x_tot_coarse, u_y_tot_coarse, u_z_tot_coarse, 
             ux_ux_tot, ux_uy_tot, ux_uz_tot, uy_uy_tot, uy_uz_tot, uz_uz_tot, 
-            nullptr, nullptr, nullptr,   // ux_in_tau etc
             u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
             ux_ux_tot_2, ux_uy_tot_2, ux_uz_tot_2, uy_uy_tot_2, uy_uz_tot_2, uz_uz_tot_2, 
+            nullptr, nullptr, nullptr,   // ux_in_tau etc
             nullptr, nullptr, nullptr);   // ux_in_tau_2 etc
 
 

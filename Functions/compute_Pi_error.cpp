@@ -121,20 +121,16 @@ void compute_Pi_error(
         uz_error[index] = uz[index]  - uz_2[index];
     }
 
-    double ui_j, uj_i;
-
-    double ui_j_2, uj_i_2;
-
     double ui_j_error, uj_i_error;
     std::vector<double> Delta_tau_ij( Npts );
 
     // Some convenience handles
     //   note: the pointers aren't constant, but the things
     //         to which they are pointing are
-    double ui_loc, uj_loc, uiuj_loc;
+    double ui_loc, uj_loc, uiuj_loc, tau_loc;
     const std::vector<double> *uiuj, *ui, *uj, *ui_in_tau, *uj_in_tau;
 
-    double ui_loc_2, uj_loc_2, uiuj_loc_2;
+    double ui_loc_2, uj_loc_2, uiuj_loc_2, tau_loc_2;
     const std::vector<double> *uiuj_2, *ui_2, *uj_2, *ui_in_tau_2, *uj_in_tau_2;
 
     const std::vector<double> *ui_error, *uj_error;

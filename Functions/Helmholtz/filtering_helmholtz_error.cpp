@@ -1097,12 +1097,6 @@ void filtering_helmholtz(
             vars_to_write.push_back("u_r_error");
         }
 
-        if ( constants::COMP_PI_HELMHOLTZ ) {
-            vars_to_write.push_back("coarse_uiuj_F_r_error");
-            vars_to_write.push_back("coarse_uiuj_F_Phi_error");
-            vars_to_write.push_back("coarse_uiuj_F_Psi_error");
-        }
-
         vars_to_write.push_back("u_lon_tor_error");
         vars_to_write.push_back("u_lat_tor_error");
 
@@ -1296,6 +1290,7 @@ void filtering_helmholtz(
         filter_fields.push_back(&u_r_error);
         filt_use_mask.push_back(false);
     }
+
 
     // For spectra and spectral slopes
     double dl_Psi_tmp_error, dll_Psi_tmp_error, dl_Phi_tmp_error, dll_Phi_tmp_error, dl_ur_tmp_error, dll_ur_tmp_error,
@@ -1711,8 +1706,7 @@ void filtering_helmholtz(
                 vort_ux_tor_error, vort_uy_tor_error, vort_uz_tor_error, \
                 vort_ux_pot_error, vort_uy_pot_error, vort_uz_pot_error, \
                 vort_ux_tot_error, vort_uy_tot_error, vort_uz_tot_error, \
-                KE_tor_filt_error, KE_pot_filt_error, KE_tot_filt_error, \
-                uiuj_F_r_error, uiuj_F_Phi_error, uiuj_F_Psi_error, coarse_uiuj_F_r_error, coarse_uiuj_F_Phi_error, coarse_uiuj_F_Psi_error \
+                KE_tor_filt_error, KE_pot_filt_error, KE_tot_filt_error \
                 ) \
         private(Itime, Idepth, Ilat, Ilon, index, prev_Ilat, Ilatlon, \
                 F_tor_tmp, F_pot_tmp, u_r_tmp, uxux_tmp, uxuy_tmp, uxuz_tmp, uyuy_tmp, uyuz_tmp, uzuz_tmp, \
@@ -1728,8 +1722,6 @@ void filtering_helmholtz(
                 dl_Psi_tmp_2, dll_Psi_tmp_2, dl_Phi_tmp_2, dll_Phi_tmp_2, dl_ur_tmp_2, dll_ur_tmp_2, \
                 F_tor_tmp_error, F_pot_tmp_error, u_r_tmp_error, uxux_tmp_error, uxuy_tmp_error, uxuz_tmp_error, uyuy_tmp_error, uyuz_tmp_error, uzuz_tmp_error, \
                 vort_ux_tmp_error, vort_uy_tmp_error, vort_uz_tmp_error, \
-                filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error, dl_kernel_val_error, dll_kernel_val_error, \
-                uiuj_F_r_tmp_error, uiuj_F_Phi_tmp_error, uiuj_F_Psi_tmp_error, \
                 dl_Psi_tmp_error, dll_Psi_tmp_error, dl_Phi_tmp_error, dll_Phi_tmp_error, dl_ur_tmp_error, dll_ur_tmp_error \
                 ) \
         firstprivate(perc, wRank, local_kernel, local_dl_kernel, local_dll_kernel, \

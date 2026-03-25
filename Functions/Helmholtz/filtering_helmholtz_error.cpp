@@ -1844,9 +1844,9 @@ void filtering_helmholtz(
             
             // uiuj
             if ( constants::COMP_PI_HELMHOLTZ ) {
-                filtered_vals_error.push_back(&uiuj_F_r_tmp_error);
-                filtered_vals_error.push_back(&uiuj_F_Psi_tmp_error);
-                filtered_vals_error.push_back(&uiuj_F_Phi_tmp_error);
+                filtered_vals_error.push_back( NULL );
+                filtered_vals_error.push_back( NULL );
+                filtered_vals_error.push_back( NULL );
 
                 dl_filter_vals_error.push_back( NULL );
                 dl_filter_vals_error.push_back( NULL );
@@ -1936,7 +1936,7 @@ void filtering_helmholtz(
                         apply_filter_at_point(  
                                 filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2,
                                 dl_kernel_val, dll_kernel_val,
-                                filter_fields_2, source_data_2, Itime, Idepth, Ilat, Ilon, 
+                                filter_fields, source_data_2, Itime, Idepth, Ilat, Ilon, 
                                 LAT_lb, LAT_ub, scale, filt_use_mask, 
                                 local_kernel, local_dl_kernel, local_dll_kernel );
                         if ( (constants::DO_TIMING) and (thread_id == 0) ) { timing_records.add_to_record(MPI_Wtime() - clock_on, "filter_at_point"); }
@@ -1956,15 +1956,6 @@ void filtering_helmholtz(
                         dl_coarse_Psi.at(index) = dPsi;
                         double ddPsi = ( dll_Psi_tmp - F_tor_tmp ) * dll_kernel_val - 2 * dPsi * dl_kernel_val;
                         dll_coarse_Psi.at(index) = ddPsi;
-
-                        // u_r
-                        if ( source_data.compute_radial_vel ) {
-                            u_r_coarse.at(index) = u_r_tmp;
-                            double du_r = (dl_ur_tmp - u_r_tmp) * dl_kernel_val;
-                            dl_coarse_u_r.at(index) = du_r;
-                            double ddu_r = ( dll_ur_tmp - u_r_tmp ) * dll_kernel_val - 2 * du_r * dl_kernel_val;
-                            dll_coarse_u_r.at(index) = ddu_r;
-                        }
 
                         if ( constants::COMP_PI_HELMHOLTZ ) {
                             coarse_uiuj_F_r.at(  index) = uiuj_F_r_tmp;
@@ -1997,15 +1988,6 @@ void filtering_helmholtz(
                         double ddPsi_2 = ( dll_Psi_tmp_2 - F_tor_tmp_2 ) * dll_kernel_val - 2 * dPsi_2 * dl_kernel_val;
                         dll_coarse_Psi_2.at(index) = ddPsi_2;
 
-                        // u_r
-                        if ( source_data_2.compute_radial_vel ) {
-                            u_r_coarse_2.at(index) = u_r_tmp_2;
-                            double du_r_2 = (dl_ur_tmp_2 - u_r_tmp_2) * dl_kernel_val;
-                            dl_coarse_u_r_2.at(index) = du_r_2;
-                            double ddu_r_2 = ( dll_ur_tmp_2 - u_r_tmp_2 ) * dll_kernel_val - 2 * du_r_2 * dl_kernel_val;
-                            dll_coarse_u_r_2.at(index) = ddu_r_2;
-                        }
-
                         if ( constants::COMP_PI_HELMHOLTZ ) {
                             coarse_uiuj_F_r_2.at(  index) = uiuj_F_r_tmp_2;
                             coarse_uiuj_F_Phi_2.at(index) = uiuj_F_Phi_tmp_2;
@@ -2027,6 +2009,19 @@ void filtering_helmholtz(
 
                         // u_r
                         if ( source_data.compute_radial_vel && source_data_2.compute_radial_vel ) {
+ 
+                            u_r_coarse.at(index) = u_r_tmp;
+                            double du_r = (dl_ur_tmp - u_r_tmp) * dl_kernel_val;
+                            dl_coarse_u_r.at(index) = du_r;
+                            double ddu_r = ( dll_ur_tmp - u_r_tmp ) * dll_kernel_val - 2 * du_r * dl_kernel_val;
+                            dll_coarse_u_r.at(index) = ddu_r;
+
+                            u_r_coarse_2.at(index) = u_r_tmp_2;
+                            double du_r_2 = (dl_ur_tmp_2 - u_r_tmp_2) * dl_kernel_val;
+                            dl_coarse_u_r_2.at(index) = du_r_2;
+                            double ddu_r_2 = ( dll_ur_tmp_2 - u_r_tmp_2 ) * dll_kernel_val - 2 * du_r_2 * dl_kernel_val;
+                            dll_coarse_u_r_2.at(index) = ddu_r_2;
+
                             u_r_coarse_error.at(index) = u_r_tmp - u_r_tmp_2;
                             dl_coarse_u_r_error.at(index) = du_r - du_r_2;
                             dll_coarse_u_r_error.at(index) = ddu_r - ddu_r_2;

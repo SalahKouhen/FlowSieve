@@ -3122,29 +3122,29 @@ void filtering_helmholtz(
             // Field 2
 
             Apply_Postprocess_Routines(
-                    source_data_2, postprocess_fields_tor_2, postprocess_names, OkuboWeiss_tor_2,
+                    source_data_2, postprocess_fields_tor, postprocess_names, OkuboWeiss_tor_2,
                     scales.at(Iscale), timing_records, "postprocess_toroidal_2");
             
             Apply_Postprocess_Routines(
-                    source_data_2, postprocess_fields_pot_2, postprocess_names, OkuboWeiss_pot_2,
+                    source_data_2, postprocess_fields_pot, postprocess_names, OkuboWeiss_pot_2,
                     scales.at(Iscale), timing_records, "postprocess_potential_2");
 
             Apply_Postprocess_Routines(
-                    source_data_2, postprocess_fields_tot_2, postprocess_names, OkuboWeiss_tot_2,
+                    source_data_2, postprocess_fields_tot, postprocess_names, OkuboWeiss_tot_2,
                     scales.at(Iscale), timing_records, "postprocess_full_2");
 
             // Error
 
             Apply_Postprocess_Routines(
-                    source_data, postprocess_fields_tor_error, postprocess_names, OkuboWeiss_tor_error,
+                    source_data, postprocess_fields_tor, postprocess_names, OkuboWeiss_tor_error,
                     scales.at(Iscale), timing_records, "postprocess_toroidal_error");
 
             Apply_Postprocess_Routines(
-                    source_data, postprocess_fields_pot_error, postprocess_names, OkuboWeiss_pot_error,
+                    source_data, postprocess_fields_pot, postprocess_names, OkuboWeiss_pot_error,
                     scales.at(Iscale), timing_records, "postprocess_potential_error");
 
             Apply_Postprocess_Routines(
-                    source_data, postprocess_fields_tot_error, postprocess_names, OkuboWeiss_tot_error,
+                    source_data, postprocess_fields_tot, postprocess_names, OkuboWeiss_tot_error,
                     scales.at(Iscale), timing_records, "postprocess_full_error");
 
             #if DEBUG >= 1

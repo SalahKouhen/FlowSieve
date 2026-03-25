@@ -1194,6 +1194,8 @@ void filtering_helmholtz_error(
         dl_kernel_vals_error, dll_kernel_vals_error;
     std::vector<bool> filt_use_mask;
     std::vector<const std::vector<double>*> filter_fields;
+    std::vector<const std::vector<double>*> filter_fields_2;
+    std::vector<const std::vector<double>*> filter_fields_error;
 
     double F_pot_tmp;
     filter_fields.push_back(&F_potential);
@@ -1247,29 +1249,21 @@ void filtering_helmholtz_error(
     // Field 2
 
     double F_pot_tmp_2;
-    filter_fields.push_back(&F_potential_2);
-    filt_use_mask.push_back(false);
+    filter_fields_2.push_back(&F_potential_2);
 
     double F_tor_tmp_2;
-    filter_fields.push_back(&F_toroidal_2);
-    filt_use_mask.push_back(false);
+    filter_fields_2.push_back(&F_toroidal_2);
 
     double u_r_tmp_2;
     if ( source_data_2.compute_radial_vel ) {
-        filter_fields.push_back(&u_r_2);
-        filt_use_mask.push_back(false);
+        filter_fields_2.push_back(&u_r_2);
     }
 
     double uiuj_F_r_tmp_2, uiuj_F_Phi_tmp_2, uiuj_F_Psi_tmp_2;
     if ( constants::COMP_PI_HELMHOLTZ ) {
-        filter_fields.push_back(&uiuj_F_r_2);
-        filt_use_mask.push_back(false);
-
-        filter_fields.push_back(&uiuj_F_Psi_2);
-        filt_use_mask.push_back(false);
-
-        filter_fields.push_back(&uiuj_F_Phi_2);
-        filt_use_mask.push_back(false);
+        filter_fields_2.push_back(&uiuj_F_r_2);
+        filter_fields_2.push_back(&uiuj_F_Psi_2);
+        filter_fields_2.push_back(&uiuj_F_Phi_2);
     }
 
     // For spectra and spectral slopes
@@ -1282,17 +1276,14 @@ void filtering_helmholtz_error(
     // Error
 
     double F_pot_tmp_error;
-    filter_fields.push_back(&F_potential_error);
-    filt_use_mask.push_back(false);
+    filter_fields_error.push_back(&F_potential_error);
 
     double F_tor_tmp_error;
-    filter_fields.push_back(&F_toroidal_error);
-    filt_use_mask.push_back(false);
+    filter_fields_error.push_back(&F_toroidal_error);
 
     double u_r_tmp_error;
     if ( source_data.compute_radial_vel ) {
-        filter_fields.push_back(&u_r_error);
-        filt_use_mask.push_back(false);
+        filter_fields_error.push_back(&u_r_error);
     }
 
 
@@ -1667,7 +1658,7 @@ void filtering_helmholtz_error(
         #pragma omp parallel \
         default(none) \
         shared( source_data, source_data_2, mask, stdout, perc_base, \
-                filter_fields, filt_use_mask, \
+                filter_fields, filter_fields_2, filter_fields_error, filt_use_mask, \
                 timing_records, clock_on, \
                 longitude, latitude, scale, \
                 F_potential, F_toroidal, coarse_F_tor, coarse_F_pot, u_r, u_r_coarse, \
@@ -1935,8 +1926,14 @@ void filtering_helmholtz_error(
                                 local_kernel, local_dl_kernel, local_dll_kernel );
                         apply_filter_at_point(  
                                 filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2,
-                                dl_kernel_val, dll_kernel_val,
-                                filter_fields, source_data_2, Itime, Idepth, Ilat, Ilon, 
+                                dl_kernel_val_2, dll_kernel_val_2,
+                                filter_fields_2, source_data_2, Itime, Idepth, Ilat, Ilon, 
+                                LAT_lb, LAT_ub, scale, filt_use_mask, 
+                                local_kernel, local_dl_kernel, local_dll_kernel );
+                        apply_filter_at_point(  
+                                filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error,
+                                dl_kernel_val_error, dll_kernel_val_error,
+                                filter_fields_error, source_data, Itime, Idepth, Ilat, Ilon, 
                                 LAT_lb, LAT_ub, scale, filt_use_mask, 
                                 local_kernel, local_dl_kernel, local_dll_kernel );
                         if ( (constants::DO_TIMING) and (thread_id == 0) ) { timing_records.add_to_record(MPI_Wtime() - clock_on, "filter_at_point"); }

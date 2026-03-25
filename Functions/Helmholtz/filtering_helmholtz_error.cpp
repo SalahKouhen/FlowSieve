@@ -1836,7 +1836,7 @@ void filtering_helmholtz(
             dll_filter_vals_error.push_back( &dll_Psi_tmp_error );
 
             // u_r
-            if ( source_data_error.compute_radial_vel ) {
+            if ( source_data.compute_radial_vel ) {
                 filtered_vals_error.push_back(&u_r_tmp_error);
                 dl_filter_vals_error.push_back( &dl_ur_tmp_error );
                 dll_filter_vals_error.push_back( &dll_ur_tmp_error );
@@ -2309,9 +2309,9 @@ void filtering_helmholtz(
         vel_Spher_to_Cart( u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, u_r_coarse_2, u_lon_pot_2, u_lat_pot_2, source_data_2 );
         vel_Spher_to_Cart( u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, u_r_coarse_2, u_lon_tot_2, u_lat_tot_2, source_data_2 );
 
-        vel_Spher_to_Cart( u_x_tor_coarse_error, u_y_tor_coarse_error, u_z_tor_coarse_error, zero_array, u_lon_tor_error, u_lat_tor_error, source_data_error );
-        vel_Spher_to_Cart( u_x_pot_coarse_error, u_y_pot_coarse_error, u_z_pot_coarse_error, u_r_coarse_error, u_lon_pot_error, u_lat_pot_error, source_data_error );
-        vel_Spher_to_Cart( u_x_tot_coarse_error, u_y_tot_coarse_error, u_z_tot_coarse_error, u_r_coarse_error, u_lon_tot_error, u_lat_tot_error, source_data_error );
+        vel_Spher_to_Cart( u_x_tor_coarse_error, u_y_tor_coarse_error, u_z_tor_coarse_error, zero_array, u_lon_tor_error, u_lat_tor_error, source_data );
+        vel_Spher_to_Cart( u_x_pot_coarse_error, u_y_pot_coarse_error, u_z_pot_coarse_error, u_r_coarse_error, u_lon_pot_error, u_lat_pot_error, source_data );
+        vel_Spher_to_Cart( u_x_tot_coarse_error, u_y_tot_coarse_error, u_z_tot_coarse_error, u_r_coarse_error, u_lon_tot_error, u_lat_tot_error, source_data );
 
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "Sphere to Cart Conversion"); }
 
@@ -2493,17 +2493,17 @@ void filtering_helmholtz(
         compute_vorticity(
                 vort_tor_r_error, null_vector, null_vector, div_tor_error, OkuboWeiss_tor_error, 
                 null_vector, null_vector, null_vector, null_vector,
-                source_data_error, zero_array, u_lon_tor_error, u_lat_tor_error);
+                source_data, zero_array, u_lon_tor_error, u_lat_tor_error);
 
         compute_vorticity(
                 vort_pot_r_error, null_vector, null_vector, div_pot_error, OkuboWeiss_pot_error,
                 null_vector, null_vector, null_vector, null_vector,
-                source_data_error, u_r_coarse_error, u_lon_pot_error, u_lat_pot_error);
+                source_data, u_r_coarse_error, u_lon_pot_error, u_lat_pot_error);
 
         compute_vorticity(
                 vort_tot_r_error, null_vector, null_vector, div_tot_error, OkuboWeiss_tot_error,
                 null_vector, null_vector, null_vector, null_vector,
-                source_data_error, u_r_coarse_error, u_lon_tot_error, u_lat_tot_error);
+                source_data, u_r_coarse_error, u_lon_tot_error, u_lat_tot_error);
 
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute vorticity"); }
 

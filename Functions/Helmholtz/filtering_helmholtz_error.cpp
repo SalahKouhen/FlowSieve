@@ -308,6 +308,7 @@ void filtering_helmholtz(
         Z_pot( num_pts, 0. ),
         Z_tot( num_pts, 0. );
 
+    std::vector<double> 
         //
         //// Arrays to store filtered Helmholtz scalars and their ell-derivatives for field 2
         //

@@ -22,7 +22,7 @@
  * @param[in]   comm            MPI communicator (default MPI_COMM_WORLD)
  *
  */
-void filtering_helmholtz(
+void filtering_helmholtz_error(
         const dataset & source_data,
         const dataset & source_data_2,
         const std::vector<double> & scales,
@@ -78,7 +78,7 @@ void filtering_helmholtz(
     MPI_Comm_size( comm, &wSize );
 
     #if DEBUG >= 2
-    if (wRank == 0) { fprintf(stdout, "\nEntered filtering_helmholtz\n\n"); }
+    if (wRank == 0) { fprintf(stdout, "\nEntered filtering_helmholtz_error\n\n"); }
     #endif
 
     // If we've passed the DO_TIMING flag, then create some timing vars

@@ -1188,6 +1188,10 @@ void filtering_helmholtz(
     //
     std::vector<double*> filtered_vals, dl_filter_vals, dll_filter_vals, 
         dl_kernel_vals, dll_kernel_vals;
+    std::vector<double*> filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2, 
+        dl_kernel_vals_2, dll_kernel_vals_2;
+    std::vector<double*> filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error, 
+        dl_kernel_vals_error, dll_kernel_vals_error;
     std::vector<bool> filt_use_mask;
     std::vector<const std::vector<double>*> filter_fields;
 
@@ -1722,6 +1726,7 @@ void filtering_helmholtz(
                 dl_Psi_tmp_2, dll_Psi_tmp_2, dl_Phi_tmp_2, dll_Phi_tmp_2, dl_ur_tmp_2, dll_ur_tmp_2, \
                 F_tor_tmp_error, F_pot_tmp_error, u_r_tmp_error, uxux_tmp_error, uxuy_tmp_error, uxuz_tmp_error, uyuy_tmp_error, uyuz_tmp_error, uzuz_tmp_error, \
                 vort_ux_tmp_error, vort_uy_tmp_error, vort_uz_tmp_error, \
+                filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error, dl_kernel_val_error, dll_kernel_val_error, \
                 dl_Psi_tmp_error, dll_Psi_tmp_error, dl_Phi_tmp_error, dll_Phi_tmp_error, dl_ur_tmp_error, dll_ur_tmp_error \
                 ) \
         firstprivate(perc, wRank, local_kernel, local_dl_kernel, local_dll_kernel, \

@@ -1297,18 +1297,6 @@ void filtering_helmholtz(
         filt_use_mask.push_back(false);
     }
 
-    double uiuj_F_r_tmp_error, uiuj_F_Phi_tmp_error, uiuj_F_Psi_tmp_error;
-    if ( constants::COMP_PI_HELMHOLTZ ) {
-        filter_fields.push_back(&uiuj_F_r_error);
-        filt_use_mask.push_back(false);
-
-        filter_fields.push_back(&uiuj_F_Psi_error);
-        filt_use_mask.push_back(false);
-
-        filter_fields.push_back(&uiuj_F_Phi_error);
-        filt_use_mask.push_back(false);
-    }
-
     // For spectra and spectral slopes
     double dl_Psi_tmp_error, dll_Psi_tmp_error, dl_Phi_tmp_error, dll_Phi_tmp_error, dl_ur_tmp_error, dll_ur_tmp_error,
            dl_kernel_val_error, dll_kernel_val_error;

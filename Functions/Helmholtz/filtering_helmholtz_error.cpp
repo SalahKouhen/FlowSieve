@@ -70,6 +70,11 @@ void filtering_helmholtz(
     const std::vector<double>   &wind_tau_Psi_2 = ( constants::COMP_WIND_FORCE ) ? source_data_2.variables.at("wind_tau_Psi") : zero_vector,
                                 &wind_tau_Phi_2 = ( constants::COMP_WIND_FORCE ) ? source_data_2.variables.at("wind_tau_Phi") : zero_vector;
 
+    // Tidy names for error fields
+    const std::vector<double> &uiuj_F_r_error   = ( constants::COMP_PI_HELMHOLTZ ) ? F_potential_error : zero_vector,
+                              &uiuj_F_Phi_error = ( constants::COMP_PI_HELMHOLTZ ) ? F_toroidal_error : zero_vector,
+                              &uiuj_F_Psi_error = ( constants::COMP_PI_HELMHOLTZ ) ? u_r_error : zero_vector;
+
     // Get some MPI info
     int wRank, wSize;
     MPI_Comm_rank( comm, &wRank );

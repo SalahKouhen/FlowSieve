@@ -1830,6 +1830,11 @@ void filtering_helmholtz_error(
                             fprintf(stderr, "[DEBUG] About to call apply_filter_at_point #1\n");
                             fprintf(stderr, "  filtered_vals.size()=%zu, dl_filter_vals.size()=%zu\n", filtered_vals.size(), dl_filter_vals.size());
                             fprintf(stderr, "  filter_fields.size()=%zu\n", filter_fields.size());
+                            fprintf(stderr, "  local_kernel.size()=%zu, local_dl_kernel.size()=%zu, local_dll_kernel.size()=%zu\n", 
+                                    local_kernel.size(), local_dl_kernel.size(), local_dll_kernel.size());
+                            fprintf(stderr, "  Nlat=%d, Nlon=%d, Ntime=%d, Ndepth=%d\n", Nlat, Nlon, Ntime, Ndepth);
+                            fprintf(stderr, "  latitude.size()=%zu, longitude.size()=%zu\n", 
+                                    source_data.latitude.size(), source_data.longitude.size());
                             fflush(stderr);
                         }
                         

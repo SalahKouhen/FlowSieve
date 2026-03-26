@@ -1620,6 +1620,10 @@ void filtering_helmholtz_error(
         fflush(stdout);
         #endif
 
+        // Debug: Check if we get here before OMP parallel
+        fprintf(stderr, "[DEBUG] About to enter OMP parallel for scale %.5g km\n", scales.at(Iscale)/1e3);
+        fflush(stderr);
+
         #pragma omp parallel \
         default(none) \
         shared( source_data, source_data_2, mask, stdout, perc_base, \
@@ -1666,29 +1670,28 @@ void filtering_helmholtz_error(
                 vort_ux_tor_error, vort_uy_tor_error, vort_uz_tor_error, \
                 vort_ux_pot_error, vort_uy_pot_error, vort_uz_pot_error, \
                 vort_ux_tot_error, vort_uy_tot_error, vort_uz_tot_error, \
-                KE_tor_filt_error, KE_pot_filt_error, KE_tot_filt_error, \
-                filtered_vals, dl_filter_vals, dll_filter_vals, \
-                filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2, \
-                filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error, \
-                filter_fields, filter_fields_2, filter_fields_error, filt_use_mask \
+                KE_tor_filt_error, KE_pot_filt_error, KE_tot_filt_error \
                 ) \
         private(Itime, Idepth, Ilat, Ilon, index, prev_Ilat, Ilatlon, \
                 F_tor_tmp, F_pot_tmp, u_r_tmp, uxux_tmp, uxuy_tmp, uxuz_tmp, uyuy_tmp, uyuz_tmp, uzuz_tmp, \
                 vort_ux_tmp, vort_uy_tmp, vort_uz_tmp, LAT_lb, LAT_ub, thread_id, num_threads, \
-                dl_kernel_val, dll_kernel_val, \
+                filtered_vals, dl_filter_vals, dll_filter_vals, dl_kernel_val, dll_kernel_val, \
                 dl_Psi_tmp, dll_Psi_tmp, dl_Phi_tmp, dll_Phi_tmp, dl_ur_tmp, dll_ur_tmp, \
                 F_tor_tmp_2, F_pot_tmp_2, u_r_tmp_2, uxux_tmp_2, uxuy_tmp_2, uxuz_tmp_2, uyuy_tmp_2, uyuz_tmp_2, uzuz_tmp_2, \
                 vort_ux_tmp_2, vort_uy_tmp_2, vort_uz_tmp_2, \
-                dl_kernel_val_2, dll_kernel_val_2, \
+                filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2, dl_kernel_val_2, dll_kernel_val_2, \
                 dl_Psi_tmp_2, dll_Psi_tmp_2, dl_Phi_tmp_2, dll_Phi_tmp_2, dl_ur_tmp_2, dll_ur_tmp_2, \
                 F_tor_tmp_error, F_pot_tmp_error, u_r_tmp_error, uxux_tmp_error, uxuy_tmp_error, uxuz_tmp_error, uyuy_tmp_error, uyuz_tmp_error, uzuz_tmp_error, \
                 vort_ux_tmp_error, vort_uy_tmp_error, vort_uz_tmp_error, \
-                dl_kernel_val_error, dll_kernel_val_error, \
+                filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error, dl_kernel_val_error, dll_kernel_val_error, \
                 dl_Psi_tmp_error, dll_Psi_tmp_error, dl_Phi_tmp_error, dll_Phi_tmp_error, dl_ur_tmp_error, dll_ur_tmp_error \
                 ) \
         firstprivate(perc, wRank, local_kernel, local_dl_kernel, local_dll_kernel, \
                 perc_count, Nlon, Nlat, Ndepth, Ntime )
         {
+            // Debug: start of parallel region
+            fprintf(stderr, "[DEBUG Thread %d] Entered parallel region\n", omp_get_thread_num());
+            fflush(stderr);
 
             filtered_vals.clear();
 
@@ -1766,6 +1769,11 @@ void filtering_helmholtz_error(
                 Ilon = Ilatlon % Nlon;
                 Ilat = Ilatlon / Nlon;
 
+                if (thread_id == 0 && Ilatlon == 0) {
+                    fprintf(stderr, "[DEBUG] Entered main loop, Ilat=0, Ilon=0\n");
+                    fflush(stderr);
+                }
+
                 get_lat_bounds(LAT_lb, LAT_ub, latitude,  Ilat, scale); 
 
                 // If our longitude grid is uniform, and spans the full periodic domain,
@@ -1817,6 +1825,14 @@ void filtering_helmholtz_error(
 
                         // Apply the filter at the point
                         if ( (constants::DO_TIMING) and (thread_id == 0) ) { clock_on = MPI_Wtime(); }
+                        
+                        if (thread_id == 0 && Ilatlon == 0) {
+                            fprintf(stderr, "[DEBUG] About to call apply_filter_at_point #1\n");
+                            fprintf(stderr, "  filtered_vals.size()=%zu, dl_filter_vals.size()=%zu\n", filtered_vals.size(), dl_filter_vals.size());
+                            fprintf(stderr, "  filter_fields.size()=%zu\n", filter_fields.size());
+                            fflush(stderr);
+                        }
+                        
                         apply_filter_at_point(  
                                 filtered_vals, dl_filter_vals, dll_filter_vals,
                                 dl_kernel_val, dll_kernel_val,

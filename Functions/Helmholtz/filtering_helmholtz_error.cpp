@@ -1626,7 +1626,7 @@ void filtering_helmholtz_error(
 
         #pragma omp parallel \
         default(none) \
-        shared( source_data, source_data_2, mask, stdout, perc_base, \
+        shared( source_data, source_data_2, mask, stdout, stderr, perc_base, \
                 filter_fields, filter_fields_2, filter_fields_error, filt_use_mask, \
                 timing_records, clock_on, \
                 longitude, latitude, scale, \

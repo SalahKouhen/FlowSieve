@@ -1211,33 +1211,6 @@ void filtering_helmholtz_error(
         filt_use_mask.push_back(false);
     }
 
-    double uiuj_F_r_tmp, uiuj_F_Phi_tmp, uiuj_F_Psi_tmp;
-    if ( constants::COMP_PI_HELMHOLTZ ) {
-        filter_fields.push_back(&uiuj_F_r);
-        filt_use_mask.push_back(false);
-
-        filter_fields.push_back(&uiuj_F_Psi);
-        filt_use_mask.push_back(false);
-
-        filter_fields.push_back(&uiuj_F_Phi);
-        filt_use_mask.push_back(false);
-    }
-
-    double wind_tau_Psi_tmp, wind_tau_Phi_tmp, tau_wind_dot_u_tor_tmp, tau_wind_dot_u_pot_tmp; 
-    if ( constants::COMP_WIND_FORCE ) {
-        filter_fields.push_back( &wind_tau_Psi );
-        filt_use_mask.push_back(false);
-
-        filter_fields.push_back( &wind_tau_Phi );
-        filt_use_mask.push_back(false);
-
-        filter_fields.push_back( &tau_wind_dot_u_tor );
-        filt_use_mask.push_back(false);
-
-        filter_fields.push_back( &tau_wind_dot_u_pot );
-        filt_use_mask.push_back(false);
-    }
-
     // For spectra and spectral slopes
     double dl_Psi_tmp, dll_Psi_tmp, dl_Phi_tmp, dll_Phi_tmp, dl_ur_tmp, dll_ur_tmp,
            dl_kernel_val, dll_kernel_val;
@@ -1257,13 +1230,6 @@ void filtering_helmholtz_error(
     double u_r_tmp_2;
     if ( source_data_2.compute_radial_vel ) {
         filter_fields_2.push_back(&u_r_2);
-    }
-
-    double uiuj_F_r_tmp_2, uiuj_F_Phi_tmp_2, uiuj_F_Psi_tmp_2;
-    if ( constants::COMP_PI_HELMHOLTZ ) {
-        filter_fields_2.push_back(&uiuj_F_r_2);
-        filter_fields_2.push_back(&uiuj_F_Psi_2);
-        filter_fields_2.push_back(&uiuj_F_Phi_2);
     }
 
     // For spectra and spectral slopes
@@ -1741,43 +1707,6 @@ void filtering_helmholtz_error(
                 dl_filter_vals.push_back( &dl_ur_tmp );
                 dll_filter_vals.push_back( &dll_ur_tmp );
             }
-            
-            // uiuj
-            if ( constants::COMP_PI_HELMHOLTZ ) {
-                filtered_vals.push_back(&uiuj_F_r_tmp);
-                filtered_vals.push_back(&uiuj_F_Psi_tmp);
-                filtered_vals.push_back(&uiuj_F_Phi_tmp);
-
-                dl_filter_vals.push_back( NULL );
-                dl_filter_vals.push_back( NULL );
-                dl_filter_vals.push_back( NULL );
-
-                dll_filter_vals.push_back( NULL );
-                dll_filter_vals.push_back( NULL );
-                dll_filter_vals.push_back( NULL );
-            }
-
-            if ( constants::COMP_WIND_FORCE ) {
-                // wind tau
-                filtered_vals.push_back( &wind_tau_Psi_tmp );
-                filtered_vals.push_back( &wind_tau_Phi_tmp );
-
-                dl_filter_vals.push_back( NULL );
-                dl_filter_vals.push_back( NULL );
-
-                dll_filter_vals.push_back( NULL );
-                dll_filter_vals.push_back( NULL );
-
-                // wind tau dot ocean vel
-                filtered_vals.push_back( &tau_wind_dot_u_tor_tmp );
-                filtered_vals.push_back( &tau_wind_dot_u_pot_tmp );
-
-                dl_filter_vals.push_back( NULL );
-                dl_filter_vals.push_back( NULL );
-
-                dll_filter_vals.push_back( NULL );
-                dll_filter_vals.push_back( NULL );
-            }
 
             filtered_vals_2.clear();
 
@@ -1796,21 +1725,6 @@ void filtering_helmholtz_error(
                 filtered_vals_2.push_back(&u_r_tmp_2);
                 dl_filter_vals_2.push_back( &dl_ur_tmp_2 );
                 dll_filter_vals_2.push_back( &dll_ur_tmp_2 );
-            }
-            
-            // uiuj
-            if ( constants::COMP_PI_HELMHOLTZ ) {
-                filtered_vals_2.push_back(&uiuj_F_r_tmp_2);
-                filtered_vals_2.push_back(&uiuj_F_Psi_tmp_2);
-                filtered_vals_2.push_back(&uiuj_F_Phi_tmp_2);
-
-                dl_filter_vals_2.push_back( NULL );
-                dl_filter_vals_2.push_back( NULL );
-                dl_filter_vals_2.push_back( NULL );
-
-                dll_filter_vals_2.push_back( NULL );
-                dll_filter_vals_2.push_back( NULL );
-                dll_filter_vals_2.push_back( NULL );
             }
 
             filtered_vals_error.clear();

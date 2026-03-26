@@ -1194,8 +1194,6 @@ void filtering_helmholtz_error(
         dl_kernel_vals_error, dll_kernel_vals_error;
     std::vector<bool> filt_use_mask;
     std::vector<const std::vector<double>*> filter_fields;
-    std::vector<const std::vector<double>*> filter_fields_2;
-    std::vector<const std::vector<double>*> filter_fields_error;
 
     double F_pot_tmp;
     filter_fields.push_back(&F_potential);
@@ -1285,7 +1283,6 @@ void filtering_helmholtz_error(
     if ( source_data.compute_radial_vel ) {
         filter_fields_error.push_back(&u_r_error);
     }
-
 
     // For spectra and spectral slopes
     double dl_Psi_tmp_error, dll_Psi_tmp_error, dl_Phi_tmp_error, dll_Phi_tmp_error, dl_ur_tmp_error, dll_ur_tmp_error,
@@ -1831,21 +1828,6 @@ void filtering_helmholtz_error(
                 filtered_vals_error.push_back(&u_r_tmp_error);
                 dl_filter_vals_error.push_back( &dl_ur_tmp_error );
                 dll_filter_vals_error.push_back( &dll_ur_tmp_error );
-            }
-            
-            // uiuj
-            if ( constants::COMP_PI_HELMHOLTZ ) {
-                filtered_vals_error.push_back( NULL );
-                filtered_vals_error.push_back( NULL );
-                filtered_vals_error.push_back( NULL );
-
-                dl_filter_vals_error.push_back( NULL );
-                dl_filter_vals_error.push_back( NULL );
-                dl_filter_vals_error.push_back( NULL );
-
-                dll_filter_vals_error.push_back( NULL );
-                dll_filter_vals_error.push_back( NULL );
-                dll_filter_vals_error.push_back( NULL );
             }
 
             thread_id = omp_get_thread_num();  // thread ID

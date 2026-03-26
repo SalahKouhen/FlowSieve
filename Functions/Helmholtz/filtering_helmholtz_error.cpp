@@ -1194,6 +1194,8 @@ void filtering_helmholtz_error(
         dl_kernel_vals_error, dll_kernel_vals_error;
     std::vector<bool> filt_use_mask;
     std::vector<const std::vector<double>*> filter_fields;
+    std::vector<const std::vector<double>*> filter_fields_2;
+    std::vector<const std::vector<double>*> filter_fields_error;
 
     double F_pot_tmp;
     filter_fields.push_back(&F_potential);

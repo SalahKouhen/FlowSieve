@@ -52,6 +52,10 @@ void apply_filter_at_point(
         fprintf(stderr, "  dll_coarse_vals.size() = %zu\n", dll_coarse_vals.size());
         assert(false);
     }
+    
+    fprintf(stderr, "[apply_filter] START: LAT_lb=%d, LAT_ub=%d, Ilat=%d, Ilon=%d\n", LAT_lb, LAT_ub, Ilat, Ilon);
+    fflush(stderr);
+    
     const size_t Nfields = fields.size();
 
     const std::vector<double>   &latitude   = source_data.latitude,
@@ -83,11 +87,21 @@ void apply_filter_at_point(
     const bool do_dl  = ( dl_coarse_vals.size() > 0),
                do_dll = ( dll_coarse_vals.size() > 0);
 
+    fprintf(stderr, "[apply_filter] About to enter LAT loop: LAT_lb=%d, LAT_ub=%d, Nlat=%d\n", LAT_lb, LAT_ub, Nlat);
+    fflush(stderr);
+
     for (int LAT = LAT_lb; LAT < LAT_ub; LAT++) {
 
         // Handle periodicity if necessary
         if (constants::PERIODIC_Y) { curr_lat = ( LAT % Nlat + Nlat ) % Nlat; }
         else                       { curr_lat = LAT; }
+        
+        if (curr_lat < 0 || curr_lat >= (int)latitude.size()) {
+            fprintf(stderr, "[apply_filter] ERROR: curr_lat=%d out of bounds! latitude.size()=%zu\n", curr_lat, latitude.size());
+            fflush(stderr);
+            continue;
+        }
+        
         lat_at_curr = latitude.at(curr_lat);
 
         get_lon_bounds(LON_lb, LON_ub, longitude, Ilon, lat_at_ilat, lat_at_curr, scale);

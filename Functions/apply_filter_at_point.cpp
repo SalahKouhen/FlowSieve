@@ -44,7 +44,14 @@ void apply_filter_at_point(
         const std::vector<double> * weight
         ) {
 
-    assert(coarse_vals.size() == fields.size());
+    if (coarse_vals.size() != fields.size()) {
+        fprintf(stderr, "ERROR in apply_filter_at_point: size mismatch!\n");
+        fprintf(stderr, "  coarse_vals.size() = %zu\n", coarse_vals.size());
+        fprintf(stderr, "  fields.size() = %zu\n", fields.size());
+        fprintf(stderr, "  dl_coarse_vals.size() = %zu\n", dl_coarse_vals.size());
+        fprintf(stderr, "  dll_coarse_vals.size() = %zu\n", dll_coarse_vals.size());
+        assert(false);
+    }
     const size_t Nfields = fields.size();
 
     const std::vector<double>   &latitude   = source_data.latitude,

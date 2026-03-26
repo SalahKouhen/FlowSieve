@@ -1672,13 +1672,10 @@ void filtering_helmholtz_error(
                 F_tor_tmp, F_pot_tmp, u_r_tmp, uxux_tmp, uxuy_tmp, uxuz_tmp, uyuy_tmp, uyuz_tmp, uzuz_tmp, \
                 vort_ux_tmp, vort_uy_tmp, vort_uz_tmp, LAT_lb, LAT_ub, thread_id, num_threads, \
                 filtered_vals, dl_filter_vals, dll_filter_vals, dl_kernel_val, dll_kernel_val, \
-                uiuj_F_r_tmp, uiuj_F_Phi_tmp, uiuj_F_Psi_tmp, \
                 dl_Psi_tmp, dll_Psi_tmp, dl_Phi_tmp, dll_Phi_tmp, dl_ur_tmp, dll_ur_tmp, \
-                wind_tau_Psi_tmp, wind_tau_Phi_tmp, tau_wind_dot_u_tor_tmp, tau_wind_dot_u_pot_tmp, \
                 F_tor_tmp_2, F_pot_tmp_2, u_r_tmp_2, uxux_tmp_2, uxuy_tmp_2, uxuz_tmp_2, uyuy_tmp_2, uyuz_tmp_2, uzuz_tmp_2, \
                 vort_ux_tmp_2, vort_uy_tmp_2, vort_uz_tmp_2, \
                 filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2, dl_kernel_val_2, dll_kernel_val_2, \
-                uiuj_F_r_tmp_2, uiuj_F_Phi_tmp_2, uiuj_F_Psi_tmp_2, \
                 dl_Psi_tmp_2, dll_Psi_tmp_2, dl_Phi_tmp_2, dll_Phi_tmp_2, dl_ur_tmp_2, dll_ur_tmp_2, \
                 F_tor_tmp_error, F_pot_tmp_error, u_r_tmp_error, uxux_tmp_error, uxuy_tmp_error, uxuz_tmp_error, uyuy_tmp_error, uyuz_tmp_error, uzuz_tmp_error, \
                 vort_ux_tmp_error, vort_uy_tmp_error, vort_uz_tmp_error, \
@@ -1852,22 +1849,7 @@ void filtering_helmholtz_error(
                         double ddPsi = ( dll_Psi_tmp - F_tor_tmp ) * dll_kernel_val - 2 * dPsi * dl_kernel_val;
                         dll_coarse_Psi.at(index) = ddPsi;
 
-                        if ( constants::COMP_PI_HELMHOLTZ ) {
-                            coarse_uiuj_F_r.at(  index) = uiuj_F_r_tmp;
-                            coarse_uiuj_F_Phi.at(index) = uiuj_F_Phi_tmp;
-                            if ( ( uiuj_F_Phi_tmp == 0 ) and ( wRank == 0 ) ) {
-                                fprintf( stdout, " bar(F_phi[%'d,%'d]) = 0 (loc val is %'.4g)\n", Ilat, Ilon, uiuj_F_Phi.at(index) );
-                            }
-                            coarse_uiuj_F_Psi.at(index) = uiuj_F_Psi_tmp;
-                        }
 
-                        if ( constants::COMP_WIND_FORCE ) {
-                            coarse_wind_tau_Psi.at( index ) = wind_tau_Psi_tmp;
-                            coarse_wind_tau_Phi.at( index ) = wind_tau_Phi_tmp;
-                            coarse_tau_wind_dot_u_tor.at( index ) = tau_wind_dot_u_tor_tmp;
-                            coarse_tau_wind_dot_u_pot.at( index ) = tau_wind_dot_u_pot_tmp;
-                            coarse_tau_wind_dot_u_tot.at( index ) = tau_wind_dot_u_tor_tmp + tau_wind_dot_u_pot_tmp;
-                        }
 
                         // Phi
                         coarse_F_pot_2.at(index) = F_pot_tmp_2;
@@ -1883,14 +1865,7 @@ void filtering_helmholtz_error(
                         double ddPsi_2 = ( dll_Psi_tmp_2 - F_tor_tmp_2 ) * dll_kernel_val - 2 * dPsi_2 * dl_kernel_val;
                         dll_coarse_Psi_2.at(index) = ddPsi_2;
 
-                        if ( constants::COMP_PI_HELMHOLTZ ) {
-                            coarse_uiuj_F_r_2.at(  index) = uiuj_F_r_tmp_2;
-                            coarse_uiuj_F_Phi_2.at(index) = uiuj_F_Phi_tmp_2;
-                            if ( ( uiuj_F_Phi_tmp_2 == 0 ) and ( wRank == 0 ) ) {
-                                fprintf( stdout, " bar(F_phi[%'d,%'d]) = 0 (loc val is %'.4g)\n", Ilat, Ilon, uiuj_F_Phi_2.at(index) );
-                            }
-                            coarse_uiuj_F_Psi_2.at(index) = uiuj_F_Psi_tmp_2;
-                        }
+
 
                         // Phi
                         coarse_F_pot_error.at(index) = F_pot_tmp - F_pot_tmp_2;

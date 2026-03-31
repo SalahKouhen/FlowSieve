@@ -96,6 +96,11 @@ void apply_filter_at_point(
         if (constants::PERIODIC_Y) { curr_lat = ( LAT % Nlat + Nlat ) % Nlat; }
         else                       { curr_lat = LAT; }
         
+        if (LAT == LAT_lb) {
+            fprintf(stderr, "[apply_filter] Entering LAT loop iteration: LAT=%d, curr_lat=%d\n", LAT, curr_lat);
+            fflush(stderr);
+        }
+        
         if (curr_lat < 0 || curr_lat >= (int)latitude.size()) {
             fprintf(stderr, "[apply_filter] ERROR: curr_lat=%d out of bounds! latitude.size()=%zu\n", curr_lat, latitude.size());
             fflush(stderr);
@@ -105,6 +110,12 @@ void apply_filter_at_point(
         lat_at_curr = latitude.at(curr_lat);
 
         get_lon_bounds(LON_lb, LON_ub, longitude, Ilon, lat_at_ilat, lat_at_curr, scale);
+        
+        if (LAT == LAT_lb) {
+            fprintf(stderr, "[apply_filter] LON bounds: LON_lb=%d, LON_ub=%d\n", LON_lb, LON_ub);
+            fflush(stderr);
+        }
+        
         for (int LON = LON_lb; LON < LON_ub; LON++ ) {
 
             // Handle periodicity if necessary
@@ -120,11 +131,28 @@ void apply_filter_at_point(
             } else {
                 kernel_index = Index(0, 0, curr_lat, curr_lon, Ntime, Ndepth, Nlat, Nlon);
             }
+            
+            if (LAT == LAT_lb && LON == LON_lb) {
+                fprintf(stderr, "[apply_filter] First kernel access: kernel_index=%zu, local_kernel.size()=%zu\n", kernel_index, local_kernel.size());
+                fflush(stderr);
+            }
+            if (kernel_index >= local_kernel.size()) {
+                fprintf(stderr, "[apply_filter] ERROR: kernel_index=%zu out of bounds! local_kernel.size()=%zu\n", kernel_index, local_kernel.size());
+                fflush(stderr);
+                continue;
+            }
+            
             #if DEBUG >= 1
             kern = local_kernel.at(kernel_index);
             if (do_dl) { dl_kern  = local_dl_kernel.at(kernel_index); }
             if (do_dll) { dll_kern = local_dll_kernel.at(kernel_index); }
             area = dAreas.at(kernel_index);
+            
+            if (index >= mask.size()) {
+                fprintf(stderr, "[apply_filter] ERROR: index=%zu out of bounds! mask.size()=%zu\n", index, mask.size());
+                fflush(stderr);
+                continue;
+            }
             bool is_water = mask.at(index);
             #else
             kern = local_kernel[kernel_index];

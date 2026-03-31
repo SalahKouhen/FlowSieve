@@ -1675,16 +1675,19 @@ void filtering_helmholtz_error(
         private(Itime, Idepth, Ilat, Ilon, index, prev_Ilat, Ilatlon, \
                 F_tor_tmp, F_pot_tmp, u_r_tmp, uxux_tmp, uxuy_tmp, uxuz_tmp, uyuy_tmp, uyuz_tmp, uzuz_tmp, \
                 vort_ux_tmp, vort_uy_tmp, vort_uz_tmp, LAT_lb, LAT_ub, thread_id, num_threads, \
-                filtered_vals, dl_filter_vals, dll_filter_vals, dl_kernel_val, dll_kernel_val, \
+                dl_kernel_val, dll_kernel_val, \
                 dl_Psi_tmp, dll_Psi_tmp, dl_Phi_tmp, dll_Phi_tmp, dl_ur_tmp, dll_ur_tmp, \
                 F_tor_tmp_2, F_pot_tmp_2, u_r_tmp_2, uxux_tmp_2, uxuy_tmp_2, uxuz_tmp_2, uyuy_tmp_2, uyuz_tmp_2, uzuz_tmp_2, \
                 vort_ux_tmp_2, vort_uy_tmp_2, vort_uz_tmp_2, \
-                filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2, dl_kernel_val_2, dll_kernel_val_2, \
+                dl_kernel_val_2, dll_kernel_val_2, \
                 dl_Psi_tmp_2, dll_Psi_tmp_2, dl_Phi_tmp_2, dll_Phi_tmp_2, dl_ur_tmp_2, dll_ur_tmp_2, \
                 F_tor_tmp_error, F_pot_tmp_error, u_r_tmp_error, uxux_tmp_error, uxuy_tmp_error, uxuz_tmp_error, uyuy_tmp_error, uyuz_tmp_error, uzuz_tmp_error, \
                 vort_ux_tmp_error, vort_uy_tmp_error, vort_uz_tmp_error, \
-                filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error, dl_kernel_val_error, dll_kernel_val_error, \
-                dl_Psi_tmp_error, dll_Psi_tmp_error, dl_Phi_tmp_error, dll_Phi_tmp_error, dl_ur_tmp_error, dll_ur_tmp_error \
+                dl_kernel_val_error, dll_kernel_val_error, \
+                dl_Psi_tmp_error, dll_Psi_tmp_error, dl_Phi_tmp_error, dll_Phi_tmp_error, dl_ur_tmp_error, dll_ur_tmp_error, \
+                filtered_vals, dl_filter_vals, dll_filter_vals, \
+                filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2, \
+                filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error \
                 ) \
         firstprivate(perc, wRank, local_kernel, local_dl_kernel, local_dll_kernel, \
                 perc_count, Nlon, Nlat, Ndepth, Ntime )

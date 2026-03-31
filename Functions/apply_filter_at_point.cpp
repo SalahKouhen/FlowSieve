@@ -44,18 +44,7 @@ void apply_filter_at_point(
         const std::vector<double> * weight
         ) {
 
-    if (coarse_vals.size() != fields.size()) {
-        fprintf(stderr, "ERROR in apply_filter_at_point: size mismatch!\n");
-        fprintf(stderr, "  coarse_vals.size() = %zu\n", coarse_vals.size());
-        fprintf(stderr, "  fields.size() = %zu\n", fields.size());
-        fprintf(stderr, "  dl_coarse_vals.size() = %zu\n", dl_coarse_vals.size());
-        fprintf(stderr, "  dll_coarse_vals.size() = %zu\n", dll_coarse_vals.size());
-        assert(false);
-    }
-    
-    fprintf(stderr, "[apply_filter] START: LAT_lb=%d, LAT_ub=%d, Ilat=%d, Ilon=%d\n", LAT_lb, LAT_ub, Ilat, Ilon);
-    fflush(stderr);
-    
+    assert(coarse_vals.size() == fields.size());
     const size_t Nfields = fields.size();
 
     const std::vector<double>   &latitude   = source_data.latitude,
@@ -87,35 +76,14 @@ void apply_filter_at_point(
     const bool do_dl  = ( dl_coarse_vals.size() > 0),
                do_dll = ( dll_coarse_vals.size() > 0);
 
-    fprintf(stderr, "[apply_filter] About to enter LAT loop: LAT_lb=%d, LAT_ub=%d, Nlat=%d\n", LAT_lb, LAT_ub, Nlat);
-    fflush(stderr);
-
     for (int LAT = LAT_lb; LAT < LAT_ub; LAT++) {
 
         // Handle periodicity if necessary
         if (constants::PERIODIC_Y) { curr_lat = ( LAT % Nlat + Nlat ) % Nlat; }
         else                       { curr_lat = LAT; }
-        
-        if (LAT == LAT_lb) {
-            fprintf(stderr, "[apply_filter] Entering LAT loop iteration: LAT=%d, curr_lat=%d\n", LAT, curr_lat);
-            fflush(stderr);
-        }
-        
-        if (curr_lat < 0 || curr_lat >= (int)latitude.size()) {
-            fprintf(stderr, "[apply_filter] ERROR: curr_lat=%d out of bounds! latitude.size()=%zu\n", curr_lat, latitude.size());
-            fflush(stderr);
-            continue;
-        }
-        
         lat_at_curr = latitude.at(curr_lat);
 
         get_lon_bounds(LON_lb, LON_ub, longitude, Ilon, lat_at_ilat, lat_at_curr, scale);
-        
-        if (LAT == LAT_lb) {
-            fprintf(stderr, "[apply_filter] LON bounds: LON_lb=%d, LON_ub=%d\n", LON_lb, LON_ub);
-            fflush(stderr);
-        }
-        
         for (int LON = LON_lb; LON < LON_ub; LON++ ) {
 
             // Handle periodicity if necessary
@@ -123,12 +91,6 @@ void apply_filter_at_point(
             else                       { curr_lon = LON; }
 
             index = Index(Itime, Idepth, curr_lat, curr_lon, Ntime, Ndepth, Nlat, Nlon);
-            
-            if (LAT == LAT_lb && LON == LON_lb) {
-                fprintf(stderr, "[apply_filter] LON loop: LON=%d, curr_lon=%d, index=%zu\n", LON, curr_lon, index);
-                fprintf(stderr, "[apply_filter] Accessing dAreas: size=%zu, index=%zu\n", dAreas.size(), index);
-                fflush(stderr);
-            }
 
             if ( (constants::UNIFORM_LON_GRID) and (constants::FULL_LON_SPAN) and (constants::PERIODIC_X) ) {
                 // In this case, we can re-use the kernel from a previous Ilon value by just shifting our indices
@@ -136,11 +98,6 @@ void apply_filter_at_point(
                 kernel_index = Index(0, 0, curr_lat, ( (LON - Ilon) % Nlon + Nlon ) % Nlon, Ntime, Ndepth, Nlat, Nlon);
             } else {
                 kernel_index = Index(0, 0, curr_lat, curr_lon, Ntime, Ndepth, Nlat, Nlon);
-            }
-            
-            if (LAT == LAT_lb && LON == LON_lb) {
-                fprintf(stderr, "[apply_filter] First kernel access: kernel_index=%zu, local_kernel.size()=%zu\n", kernel_index, local_kernel.size());
-                fflush(stderr);
             }
             if (kernel_index >= local_kernel.size()) {
                 fprintf(stderr, "[apply_filter] ERROR: kernel_index=%zu out of bounds! local_kernel.size()=%zu\n", kernel_index, local_kernel.size());

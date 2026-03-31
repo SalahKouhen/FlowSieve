@@ -146,6 +146,13 @@ void apply_filter_at_point(
             kern = local_kernel.at(kernel_index);
             if (do_dl) { dl_kern  = local_dl_kernel.at(kernel_index); }
             if (do_dll) { dll_kern = local_dll_kernel.at(kernel_index); }
+            
+            if (kernel_index >= dAreas.size()) {
+                fprintf(stderr, "[apply_filter] ERROR: kernel_index=%zu out of bounds for dAreas! dAreas.size()=%zu\n", kernel_index, dAreas.size());
+                fflush(stderr);
+                continue;
+            }
+            
             area = dAreas.at(kernel_index);
             
             if (index >= mask.size()) {
@@ -176,6 +183,11 @@ void apply_filter_at_point(
             if ( is_water ) {
                 for (size_t II = 0; II < Nfields; ++II) {
                     #if DEBUG >= 1
+                    if (LAT == LAT_lb && LON == LON_lb && II == 0) {
+                        fprintf(stderr, "[apply_filter] About to access field[%zu] at index %zu\n", II, index);
+                        fprintf(stderr, "  fields[%zu]->size()=%zu\n", II, fields.at(II)->size());
+                        fflush(stderr);
+                    }
                     loc_val = fields.at(II)->at(index);
                     tmp_vals.at(II)     += loc_val * loc_weight;
                     if (do_dl) { tmp_dl_vals.at(II)  += loc_val * dl_kern * area; }

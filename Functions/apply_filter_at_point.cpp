@@ -123,6 +123,12 @@ void apply_filter_at_point(
             else                       { curr_lon = LON; }
 
             index = Index(Itime, Idepth, curr_lat, curr_lon, Ntime, Ndepth, Nlat, Nlon);
+            
+            if (LAT == LAT_lb && LON == LON_lb) {
+                fprintf(stderr, "[apply_filter] LON loop: LON=%d, curr_lon=%d, index=%zu\n", LON, curr_lon, index);
+                fprintf(stderr, "[apply_filter] Accessing dAreas: size=%zu, index=%zu\n", dAreas.size(), index);
+                fflush(stderr);
+            }
 
             if ( (constants::UNIFORM_LON_GRID) and (constants::FULL_LON_SPAN) and (constants::PERIODIC_X) ) {
                 // In this case, we can re-use the kernel from a previous Ilon value by just shifting our indices
@@ -188,11 +194,41 @@ void apply_filter_at_point(
                         fprintf(stderr, "  fields[%zu]->size()=%zu\n", II, fields.at(II)->size());
                         fflush(stderr);
                     }
+                    
+                    // Check for null pointer
+                    if (fields.at(II) == NULL) {
+                        fprintf(stderr, "[apply_filter] ERROR: fields[%zu] is NULL!\n", II);
+                        fflush(stderr);
+                        continue;
+                    }
+                    
+                    // Check for out of bounds
+                    if (index >= fields.at(II)->size()) {
+                        fprintf(stderr, "[apply_filter] ERROR: index=%zu out of bounds for fields[%zu]! size=%zu\n", index, II, fields.at(II)->size());
+                        fflush(stderr);
+                        continue;
+                    }
+                    
                     loc_val = fields.at(II)->at(index);
                     tmp_vals.at(II)     += loc_val * loc_weight;
                     if (do_dl) { tmp_dl_vals.at(II)  += loc_val * dl_kern * area; }
                     if (do_dl) { tmp_dll_vals.at(II) += loc_val * dll_kern * area; }
                     #else
+                    
+                    // Check for null pointer (non-DEBUG version too)
+                    if (fields[II] == NULL) {
+                        fprintf(stderr, "[apply_filter] ERROR (non-DEBUG): fields[%zu] is NULL!\n", II);
+                        fflush(stderr);
+                        continue;
+                    }
+                    
+                    // Check for out of bounds
+                    if (index >= fields[II]->size()) {
+                        fprintf(stderr, "[apply_filter] ERROR (non-DEBUG): index=%zu out of bounds for fields[%zu]! size=%zu\n", index, II, fields[II]->size());
+                        fflush(stderr);
+                        continue;
+                    }
+                    
                     loc_val = fields[II]->at(index);
                     tmp_vals[II]     += loc_val * loc_weight;
                     if (do_dl) { tmp_dl_vals[II]  += loc_val * dl_kern * area; }

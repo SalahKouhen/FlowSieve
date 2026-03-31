@@ -416,6 +416,22 @@ int main(int argc, char *argv[]) {
         source_data_2.load_variable( "wind_tau_Phi", wind_tau_Phi_var_name, wind_input_fname, false, true );
     }
 
+    // Initialize cell areas for the second dataset (matching source_data initialization)
+    source_data_2.compute_cell_areas();
+    source_data_2.compute_region_areas();
+
+    // Copy regions from the first dataset
+    source_data_2.region_names = source_data.region_names;
+    source_data_2.regions      = source_data.regions;
+
+    // Mask out the pole for the second dataset, if necessary
+    mask_out_pole( source_data_2.latitude, source_data_2.mask, source_data_2.Ntime, source_data_2.Ndepth, source_data_2.Nlat, source_data_2.Nlon );
+
+    // If we need it, go ahead and merge the mask across processors for the second dataset now
+    if (source_data_2.use_depth_derivatives and ( source_data_2.Nprocs_in_depth > 1 )) {
+        source_data_2.gather_mask_across_depth( source_data_2.mask, source_data_2.mask_DEPTH );
+    }
+
     // Now pass the data along to the filtering routines
     const double pre_filter_time = MPI_Wtime();
     filtering_helmholtz_error( source_data, source_data_2, filter_scales );

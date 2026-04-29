@@ -3007,15 +3007,15 @@ void filtering_helmholtz_error(
 
             Apply_Postprocess_Routines(
                     source_data, postprocess_fields_tor, postprocess_names, OkuboWeiss_tor,
-                    scales.at(Iscale), timing_records, "postprocess_toroidal");
+                    scales.at(Iscale), timing_records, "postprocess_toroidal_1");
 
             Apply_Postprocess_Routines(
                     source_data, postprocess_fields_pot, postprocess_names, OkuboWeiss_pot,
-                    scales.at(Iscale), timing_records, "postprocess_potential");
+                    scales.at(Iscale), timing_records, "postprocess_potential_1");
 
             Apply_Postprocess_Routines(
                     source_data, postprocess_fields_tot, postprocess_names, OkuboWeiss_tot,
-                    scales.at(Iscale), timing_records, "postprocess_full");
+                    scales.at(Iscale), timing_records, "postprocess_full_1");
 
             // Field 2
             Apply_Postprocess_Routines(

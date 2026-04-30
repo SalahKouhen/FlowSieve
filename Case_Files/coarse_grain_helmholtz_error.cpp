@@ -391,6 +391,13 @@ int main(int argc, char *argv[]) {
     source_data_2.use_depth_derivatives = source_data.use_depth_derivatives;
     source_data_2.depth_is_elevation    = source_data.depth_is_elevation;
 
+    // Copy the processor divisions from source_data (critical for load_variable calls)
+    source_data_2.Nprocs_in_time = source_data.Nprocs_in_time;
+    source_data_2.Nprocs_in_depth = source_data.Nprocs_in_depth;
+    source_data_2.Nprocs_in_quadrature = source_data.Nprocs_in_quadrature;
+    source_data_2.myCounts = source_data.myCounts;
+    source_data_2.myStarts = source_data.myStarts;
+
     // Load the toroidal and potential fields from the second file
     source_data_2.load_variable( "F_potential", pot_field_var_name, Helm_input_fname_2, false, true );
     source_data_2.load_variable( "F_toroidal",  tor_field_var_name, Helm_input_fname_2, false, true );

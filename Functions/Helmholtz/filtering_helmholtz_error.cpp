@@ -2168,6 +2168,16 @@ void filtering_helmholtz_error(
         potential_vel_from_F(u_lon_pot_2, u_lat_pot_2, coarse_F_pot_2, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
 
         toroidal_vel_from_F( u_lon_tor_error, u_lat_tor_error, coarse_F_tor_error, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
+        
+        // DEBUG: Right after toroidal_vel_from_F for error
+        if (wRank == 0) { 
+            fprintf(stdout, "DEBUG: After toroidal_vel_from_F(error)\n");
+            fprintf(stdout, "  coarse_F_tor_error[0] = %.15e\n", coarse_F_tor_error[0]);
+            fprintf(stdout, "  u_lon_tor_error[0] = %.15e, u_lon_tor_error[1] = %.15e\n", 
+                    u_lon_tor_error[0], u_lon_tor_error[1]);
+            fflush(stdout);
+        }
+        
         potential_vel_from_F(u_lon_pot_error, u_lat_pot_error, coarse_F_pot_error, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
 
         #pragma omp parallel \
@@ -2813,6 +2823,13 @@ void filtering_helmholtz_error(
                     KE_pot_coarse_2.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_pot_2.at(index), 2.) + pow(u_lat_pot_2.at(index), 2.) );
                     KE_tot_coarse_2.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tot_2.at(index), 2.) + pow(u_lat_tot_2.at(index), 2.) );
 
+                    // DEBUG: Before KE_error computation
+                    if (index < 2 && wRank == 0) {
+                        fprintf(stdout, "DEBUG: Before KE_error compute at index %d\n", index);
+                        fprintf(stdout, "  u_lon_tor_error[%d] = %.15e, u_lat_tor_error[%d] = %.15e\n", 
+                                index, u_lon_tor_error.at(index), index, u_lat_tor_error.at(index));
+                    }
+                    
                     KE_tor_coarse_error.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tor_error.at(index), 2.) + pow(u_lat_tor_error.at(index), 2.) );
                     KE_pot_coarse_error.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_pot_error.at(index), 2.) + pow(u_lat_pot_error.at(index), 2.) );
                     KE_tot_coarse_error.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tot_error.at(index), 2.) + pow(u_lat_tot_error.at(index), 2.) );

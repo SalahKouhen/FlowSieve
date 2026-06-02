@@ -144,7 +144,7 @@ namespace constants
      *
      * @ingroup constants
      */
-    const bool EXTEND_DOMAIN_TO_POLES = true;
+    const bool EXTEND_DOMAIN_TO_POLES = false;
 
     /*!
      * \param CARTESIAN
@@ -257,7 +257,7 @@ namespace constants
      *
      * @ingroup constants
      */
-    const bool NO_FULL_OUTPUTS = true;
+    const bool NO_FULL_OUTPUTS = false;
 
     /*!
      * \param CAST_TO_SINGLE
@@ -319,7 +319,7 @@ namespace constants
     //const int KERNEL_OPT = 4;
     enum KernelType : int { TopHat, HyperGaussian, Gaussian, JohnsonGaussian, 
                             Sinc, SmoothHat, HighOrder };
-    const int KERNEL_OPT = KernelType::Gaussian;
+    const int KERNEL_OPT = KernelType::HighOrder;
 
     /*!
      * \param KernPad

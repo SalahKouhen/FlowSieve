@@ -96,6 +96,23 @@ int main(int argc, char *argv[]) {
                                                                    asked_help,
                                                                    "netCDF file containing Helmholtz components of u*u tensor")
                                                 : "";
+                                                                                        "netCDF file containing velocity field (only used to get land mask)"),
+                        &u_r_input_fname_2   = input.getCmdOption("--radial_velocity_input_file_2", 
+                                                                "NONE",                         
+                                                                asked_help,
+                                                                "netCDF file containing radial/vertical velocity for second file, if applicable. \nNONE if no radial velocity."),
+                        &wind_input_fname_2  = constants::COMP_WIND_FORCE ?
+                                                input.getCmdOption("--wind_tau_input_file_2",        
+                                                                   "wind_tau_projection_2.nc",       
+                                                                   asked_help,
+                                                                   "netCDF file containing surface wind stress Helmholtz Psi and Phi")
+                                                : "",
+                        &quad_input_fname_2  = constants::COMP_PI_HELMHOLTZ ? 
+                                                input.getCmdOption("--uiuj_Helmholtz_input_file_2",  
+                                                                   "helmholtz_projection_uiuj_2.nc", 
+                                                                   asked_help,
+                                                                   "netCDF file containing Helmholtz components of u*u tensor")
+                                                : "";
 
     const std::string   &time_dim_name      = input.getCmdOption("--time",        
                                                                  "time",       
@@ -141,9 +158,12 @@ int main(int argc, char *argv[]) {
                 Nprocs_in_depth_input = stoi(Nprocs_in_depth_string);
 
     const std::string   &tor_field_var_name     = input.getCmdOption("--tor_field", "Psi",   asked_help, "Name of toroidal field (streamfunction) in input file."),
+                        &tor_field_var_name_2   = input.getCmdOption("--tor_field_2", "Psi",   asked_help, "Name of toroidal field (streamfunction) in input file 2."),
                         &pot_field_var_name     = input.getCmdOption("--pot_field", "Phi",   asked_help, "Name of potential field (potential function) in input file."),
+                        &pot_field_var_name_2   = input.getCmdOption("--pot_field_2", "Phi",   asked_help, "Name of potential field (potential function) in input file 2."),
                         &vel_field_var_name     = input.getCmdOption("--vel_field", "u_lat", asked_help, "Name of a velocity field in input file (used to get land information)."),
                         &u_r_field_var_name     = input.getCmdOption("--u_r_field", "u_r",   asked_help, "Name of vertical/radial velocity field in input file (if used)."),
+                        &u_r_field_var_name_2   = input.getCmdOption("--u_r_field_2", "u_r",   asked_help, "Name of vertical/radial velocity field in input file 2 (if used)."),
                         &wind_tau_Psi_var_name  = constants::COMP_WIND_FORCE ? input.getCmdOption("--wind_tau_Psi",  "wind_tau_Psi", asked_help) : "",
                         &wind_tau_Phi_var_name  = constants::COMP_WIND_FORCE ? input.getCmdOption("--wind_tau_Phi",  "wind_tau_Phi", asked_help) : "",
                         &uiuj_F_r_var_name      = constants::COMP_PI_HELMHOLTZ ? input.getCmdOption("--uiuj_F_r",      "uiuj_F_r",     asked_help) : "",
@@ -244,12 +264,24 @@ int main(int argc, char *argv[]) {
     source_data.load_variable( "F_potential", pot_field_var_name, Helm_input_fname, false, true );
     source_data.load_variable( "F_toroidal",  tor_field_var_name, Helm_input_fname, false, true );
 
+    source_data.load_variable( "F_potential_2", pot_field_var_name_2, Helm_input_fname_2, false, true );
+    source_data.load_variable( "F_toroidal_2",  tor_field_var_name_2, Helm_input_fname_2, false, true );
+
     if ( u_r_input_fname == "NONE" ) {
         // If no u_r provided, just assume it's zero
         source_data.variables["u_r"] = std::vector<double>( source_data.variables["F_potential"].size(), 0. );
         source_data.compute_radial_vel = false;
     } else {
         source_data.load_variable( "u_r",  u_r_field_var_name, u_r_input_fname, false, true );
+        source_data.compute_radial_vel = true;
+    }
+
+    if ( u_r_input_fname == "NONE" ) {
+        // If no u_r provided, just assume it's zero
+        source_data.variables["u_r_2"] = std::vector<double>( source_data.variables["F_potential_2"].size(), 0. );
+        source_data.compute_radial_vel = false;
+    } else {
+        source_data.load_variable( "u_r_2",  u_r_field_var_name_2, u_r_input_fname_2, false, true );
         source_data.compute_radial_vel = true;
     }
 
@@ -368,10 +400,6 @@ int main(int argc, char *argv[]) {
     if (source_data.use_depth_derivatives and ( source_data.Nprocs_in_depth > 1 )) {
         source_data.gather_mask_across_depth( source_data.mask, source_data.mask_DEPTH );
     }
-
-    //
-    //// Load the second Helmholtz decomposed field
-    //
 
     // Now pass the data along to the filtering routines
     const double pre_filter_time = MPI_Wtime();

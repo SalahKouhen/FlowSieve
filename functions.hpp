@@ -236,7 +236,6 @@ void filtering_helmholtz(
 
 void filtering_helmholtz_error(
         const dataset & source_data,
-        const dataset & source_data_2,
         const std::vector<double> & scales,
         const MPI_Comm comm = MPI_COMM_WORLD
         );

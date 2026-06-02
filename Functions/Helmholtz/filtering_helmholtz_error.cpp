@@ -57,16 +57,16 @@ void filtering_helmholtz_error(
     const std::vector<int>  &myStarts = source_data.myStarts;
 
     // Create some tidy names for the second dataset
-    const std::vector<double>   &F_potential_2    = source_data.variables.at("F_potential"),
-                                &F_toroidal_2     = source_data.variables.at("F_toroidal"),
-                                &u_r_2            = source_data.variables.at("u_r");
+    const std::vector<double>   &F_potential_2    = source_data.variables.at("F_potential_2"),
+                                &F_toroidal_2     = source_data.variables.at("F_toroidal_2"),
+                                &u_r_2            = source_data.variables.at("u_r_2");
 
-    const std::vector<double>   &uiuj_F_r_2   = ( constants::COMP_PI_HELMHOLTZ ) ? source_data.variables.at("uiuj_F_r")   : zero_vector,
-                                &uiuj_F_Phi_2 = ( constants::COMP_PI_HELMHOLTZ ) ? source_data.variables.at("uiuj_F_Phi") : zero_vector,
-                                &uiuj_F_Psi_2 = ( constants::COMP_PI_HELMHOLTZ ) ? source_data.variables.at("uiuj_F_Psi") : zero_vector;
+    const std::vector<double>   &uiuj_F_r_2   = ( constants::COMP_PI_HELMHOLTZ ) ? source_data.variables.at("uiuj_F_r_2")   : zero_vector,
+                                &uiuj_F_Phi_2 = ( constants::COMP_PI_HELMHOLTZ ) ? source_data.variables.at("uiuj_F_Phi_2") : zero_vector,
+                                &uiuj_F_Psi_2 = ( constants::COMP_PI_HELMHOLTZ ) ? source_data.variables.at("uiuj_F_Psi_2") : zero_vector;
 
-    const std::vector<double>   &wind_tau_Psi_2 = ( constants::COMP_WIND_FORCE ) ? source_data.variables.at("wind_tau_Psi") : zero_vector,
-                                &wind_tau_Phi_2 = ( constants::COMP_WIND_FORCE ) ? source_data.variables.at("wind_tau_Phi") : zero_vector;
+    const std::vector<double>   &wind_tau_Psi_2 = ( constants::COMP_WIND_FORCE ) ? source_data.variables.at("wind_tau_Psi_2") : zero_vector,
+                                &wind_tau_Phi_2 = ( constants::COMP_WIND_FORCE ) ? source_data.variables.at("wind_tau_Phi_2") : zero_vector;
 
 
 

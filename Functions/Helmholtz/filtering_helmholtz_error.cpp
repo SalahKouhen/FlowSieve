@@ -2267,6 +2267,14 @@ void filtering_helmholtz_error(
                 source_data_2, scale
                 );
 
+        if (wRank == 0) { 
+            fprintf(stdout, "DEBUG: Before compute_KE_spectra_and_slopes\n");
+            fprintf(stdout, "  u_lon_tor_error[0] = %.15e, u_lon_tor_error[1] = %.15e\n", 
+                    u_lon_tor_error[0], u_lon_tor_error[1]);
+            fprintf(stdout, "  coarse_F_tor_error[0] = %.15e\n", coarse_F_tor_error[0]);
+            fflush(stdout);
+            }
+
         compute_KE_spectra_and_slopes( 
                 u_spectrum_tot_error, u_spectrum_tor_error, u_spectrum_pot_error,
                 v_spectrum_tot_error, v_spectrum_tor_error, v_spectrum_pot_error,

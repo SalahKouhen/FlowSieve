@@ -372,76 +372,10 @@ int main(int argc, char *argv[]) {
     //
     //// Load the second Helmholtz decomposed field
     //
-    #if DEBUG >= 1
-    if (wRank == 0) { fprintf(stdout, "Reading in second Helmholtz data for comparison.\n\n"); }
-    #endif
-
-    dataset source_data_2;
-
-    // Share the grid and masks from the first dataset (they should be identical)
-    source_data_2.time       = source_data.time;
-    source_data_2.depth      = source_data.depth;
-    source_data_2.latitude   = source_data.latitude;
-    source_data_2.longitude  = source_data.longitude;
-    source_data_2.mask       = source_data.mask;
-    source_data_2.Ntime      = source_data.Ntime;
-    source_data_2.Ndepth     = source_data.Ndepth;
-    source_data_2.Nlat       = source_data.Nlat;
-    source_data_2.Nlon       = source_data.Nlon;
-    source_data_2.use_depth_derivatives = source_data.use_depth_derivatives;
-    source_data_2.depth_is_elevation    = source_data.depth_is_elevation;
-
-    // Copy the processor divisions from source_data (critical for load_variable calls)
-    source_data_2.Nprocs_in_time = source_data.Nprocs_in_time;
-    source_data_2.Nprocs_in_depth = source_data.Nprocs_in_depth;
-    source_data_2.Nprocs_in_quadrature = source_data.Nprocs_in_quadrature;
-    source_data_2.myCounts = source_data.myCounts;
-    source_data_2.myStarts = source_data.myStarts;
-
-    // Load the toroidal and potential fields from the second file
-    source_data_2.load_variable( "F_potential", pot_field_var_name, Helm_input_fname_2, false, true );
-    source_data_2.load_variable( "F_toroidal",  tor_field_var_name, Helm_input_fname_2, false, true );
-
-    if ( u_r_input_fname == "NONE" ) {
-        // If no u_r provided, just assume it's zero
-        source_data_2.variables["u_r"] = std::vector<double>( source_data_2.variables["F_potential"].size(), 0. );
-        source_data_2.compute_radial_vel = false;
-    } else {
-        source_data_2.load_variable( "u_r",  u_r_field_var_name, u_r_input_fname, false, true );
-        source_data_2.compute_radial_vel = true;
-    }
-
-    // Read in the Helmholtz fields for uiuj (if applicable)
-    if ( constants::COMP_PI_HELMHOLTZ ) {
-        source_data_2.load_variable( "uiuj_F_r",      uiuj_F_r_var_name,      quad_input_fname, false, true );
-        source_data_2.load_variable( "uiuj_F_Phi",    uiuj_F_Phi_var_name,    quad_input_fname, false, true );
-        source_data_2.load_variable( "uiuj_F_Psi",    uiuj_F_Psi_var_name,    quad_input_fname, false, true );
-    }
-
-    if ( constants::COMP_WIND_FORCE ) {
-        source_data_2.load_variable( "wind_tau_Psi", wind_tau_Psi_var_name, wind_input_fname, false, true );
-        source_data_2.load_variable( "wind_tau_Phi", wind_tau_Phi_var_name, wind_input_fname, false, true );
-    }
-
-    // Initialize cell areas for the second dataset (matching source_data initialization)
-    source_data_2.compute_cell_areas();
-    source_data_2.compute_region_areas();
-
-    // Copy regions from the first dataset
-    source_data_2.region_names = source_data.region_names;
-    source_data_2.regions      = source_data.regions;
-
-    // Mask out the pole for the second dataset, if necessary
-    mask_out_pole( source_data_2.latitude, source_data_2.mask, source_data_2.Ntime, source_data_2.Ndepth, source_data_2.Nlat, source_data_2.Nlon );
-
-    // If we need it, go ahead and merge the mask across processors for the second dataset now
-    if (source_data_2.use_depth_derivatives and ( source_data_2.Nprocs_in_depth > 1 )) {
-        source_data_2.gather_mask_across_depth( source_data_2.mask, source_data_2.mask_DEPTH );
-    }
 
     // Now pass the data along to the filtering routines
     const double pre_filter_time = MPI_Wtime();
-    filtering_helmholtz_error( source_data, source_data_2, filter_scales );
+    filtering_helmholtz_error( source_data, filter_scales );
     const double post_filter_time = MPI_Wtime();
 
     // Done!

@@ -16,15 +16,13 @@
  * loop sequences, calls the other funcations (velocity conversions), and
  * calls the IO functionality.
  *
- * @param[in]   source_data     dataset class instance containing data_1 (Psi, Phi, etc)
- * @param[in]   source_data_2   dataset class instance containing data_2 (Psi, Phi, etc)
+ * @param[in]   source_data     dataset class instance containing data (Psi, Phi, etc)
  * @param[in]   scales          scales at which to filter the data
  * @param[in]   comm            MPI communicator (default MPI_COMM_WORLD)
  *
  */
 void filtering_helmholtz_error(
         const dataset & source_data,
-        const dataset & source_data_2,
         const std::vector<double> & scales,
         const MPI_Comm comm
         ) {
@@ -59,16 +57,16 @@ void filtering_helmholtz_error(
     const std::vector<int>  &myStarts = source_data.myStarts;
 
     // Create some tidy names for the second dataset
-    const std::vector<double>   &F_potential_2    = source_data_2.variables.at("F_potential"),
-                                &F_toroidal_2     = source_data_2.variables.at("F_toroidal"),
-                                &u_r_2            = source_data_2.variables.at("u_r");
+    const std::vector<double>   &F_potential_2    = source_data.variables.at("F_potential"),
+                                &F_toroidal_2     = source_data.variables.at("F_toroidal"),
+                                &u_r_2            = source_data.variables.at("u_r");
 
-    const std::vector<double>   &uiuj_F_r_2   = ( constants::COMP_PI_HELMHOLTZ ) ? source_data_2.variables.at("uiuj_F_r")   : zero_vector,
-                                &uiuj_F_Phi_2 = ( constants::COMP_PI_HELMHOLTZ ) ? source_data_2.variables.at("uiuj_F_Phi") : zero_vector,
-                                &uiuj_F_Psi_2 = ( constants::COMP_PI_HELMHOLTZ ) ? source_data_2.variables.at("uiuj_F_Psi") : zero_vector;
+    const std::vector<double>   &uiuj_F_r_2   = ( constants::COMP_PI_HELMHOLTZ ) ? source_data.variables.at("uiuj_F_r")   : zero_vector,
+                                &uiuj_F_Phi_2 = ( constants::COMP_PI_HELMHOLTZ ) ? source_data.variables.at("uiuj_F_Phi") : zero_vector,
+                                &uiuj_F_Psi_2 = ( constants::COMP_PI_HELMHOLTZ ) ? source_data.variables.at("uiuj_F_Psi") : zero_vector;
 
-    const std::vector<double>   &wind_tau_Psi_2 = ( constants::COMP_WIND_FORCE ) ? source_data_2.variables.at("wind_tau_Psi") : zero_vector,
-                                &wind_tau_Phi_2 = ( constants::COMP_WIND_FORCE ) ? source_data_2.variables.at("wind_tau_Phi") : zero_vector;
+    const std::vector<double>   &wind_tau_Psi_2 = ( constants::COMP_WIND_FORCE ) ? source_data.variables.at("wind_tau_Psi") : zero_vector,
+                                &wind_tau_Phi_2 = ( constants::COMP_WIND_FORCE ) ? source_data.variables.at("wind_tau_Phi") : zero_vector;
 
 
 
@@ -913,13 +911,13 @@ void filtering_helmholtz_error(
     // Dataset 2 vorticities
     compute_vorticity( full_vort_tor_r_2, null_vector, null_vector, null_vector, null_vector,
                 null_vector, null_vector, null_vector, null_vector,
-                source_data_2, zero_array, u_lon_tor_2, u_lat_tor_2);
+                source_data, zero_array, u_lon_tor_2, u_lat_tor_2);
     compute_vorticity( full_vort_pot_r_2, null_vector, null_vector, null_vector, null_vector,
                 null_vector, null_vector, null_vector, null_vector,
-                source_data_2, u_r_2, u_lon_pot_2, u_lat_pot_2);
+                source_data, u_r_2, u_lon_pot_2, u_lat_pot_2);
     compute_vorticity( full_vort_tot_r_2, null_vector, null_vector, null_vector, null_vector,
                 null_vector, null_vector, null_vector, null_vector,
-                source_data_2, u_r_2, u_lon_tot_2, u_lat_tot_2);
+                source_data, u_r_2, u_lon_tot_2, u_lat_tot_2);
     
     // Error vorticities (dataset 1 - dataset 2, leveraging linearity of derivatives)
     #pragma omp parallel for collapse(1) schedule(guided)
@@ -944,9 +942,9 @@ void filtering_helmholtz_error(
     vel_Spher_to_Cart( u_x_tot, u_y_tot, u_z_tot, u_r,        u_lon_tot, u_lat_tot, source_data );
     
     // Dataset 2 Cartesian velocities
-    vel_Spher_to_Cart( u_x_tor_2, u_y_tor_2, u_z_tor_2, zero_array, u_lon_tor_2, u_lat_tor_2, source_data_2 );
-    vel_Spher_to_Cart( u_x_pot_2, u_y_pot_2, u_z_pot_2, u_r_2,        u_lon_pot_2, u_lat_pot_2, source_data_2 );
-    vel_Spher_to_Cart( u_x_tot_2, u_y_tot_2, u_z_tot_2, u_r_2,        u_lon_tot_2, u_lat_tot_2, source_data_2 );
+    vel_Spher_to_Cart( u_x_tor_2, u_y_tor_2, u_z_tor_2, zero_array, u_lon_tor_2, u_lat_tor_2, source_data );
+    vel_Spher_to_Cart( u_x_pot_2, u_y_pot_2, u_z_pot_2, u_r_2,        u_lon_pot_2, u_lat_pot_2, source_data );
+    vel_Spher_to_Cart( u_x_tot_2, u_y_tot_2, u_z_tot_2, u_r_2,        u_lon_tot_2, u_lat_tot_2, source_data );
     
     // Error Cartesian velocities (leveraging linearity of coordinate transformations)
     #pragma omp parallel for collapse(1) schedule(guided)
@@ -1228,7 +1226,7 @@ void filtering_helmholtz_error(
     filter_fields_2.push_back(&F_toroidal_2);
 
     double u_r_tmp_2;
-    if ( source_data_2.compute_radial_vel ) {
+    if ( source_data.compute_radial_vel ) {
         filter_fields_2.push_back(&u_r_2);
     }
 
@@ -1626,7 +1624,7 @@ void filtering_helmholtz_error(
 
         #pragma omp parallel \
         default(none) \
-        shared( source_data, source_data_2, mask, stdout, stderr, perc_base, \
+        shared( source_data, mask, stdout, stderr, perc_base, \
                 filter_fields, filter_fields_2, filter_fields_error, filt_use_mask, \
                 timing_records, clock_on, \
                 longitude, latitude, scale, \
@@ -1729,7 +1727,7 @@ void filtering_helmholtz_error(
             dll_filter_vals_2.push_back( &dll_Psi_tmp_2 );
 
             // u_r
-            if ( source_data_2.compute_radial_vel ) {
+            if ( source_data.compute_radial_vel ) {
                 filtered_vals_2.push_back(&u_r_tmp_2);
                 dl_filter_vals_2.push_back( &dl_ur_tmp_2 );
                 dll_filter_vals_2.push_back( &dll_ur_tmp_2 );
@@ -1851,7 +1849,7 @@ void filtering_helmholtz_error(
                         apply_filter_at_point(  
                                 filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2,
                                 dl_kernel_val_2, dll_kernel_val_2,
-                                filter_fields_2, source_data_2, Itime, Idepth, Ilat, Ilon, 
+                                filter_fields_2, source_data, Itime, Idepth, Ilat, Ilon, 
                                 LAT_lb, LAT_ub, scale, filt_use_mask, 
                                 local_kernel, local_dl_kernel, local_dll_kernel );
                         apply_filter_at_point(  
@@ -1907,7 +1905,7 @@ void filtering_helmholtz_error(
                         dll_coarse_Psi_error.at(index) = ddPsi - ddPsi_2;
 
                         // u_r
-                        if ( source_data.compute_radial_vel && source_data_2.compute_radial_vel ) {
+                        if ( source_data.compute_radial_vel ) {
  
                             u_r_coarse.at(index) = u_r_tmp;
                             double du_r = (dl_ur_tmp - u_r_tmp) * dl_kernel_val;
@@ -1997,7 +1995,7 @@ void filtering_helmholtz_error(
                             // tor
                             apply_filter_at_point_for_quadratics(
                                     uxux_tmp_2, uxuy_tmp_2, uxuz_tmp_2, uyuy_tmp_2, uyuz_tmp_2, uzuz_tmp_2, vort_ux_tmp_2, vort_uy_tmp_2, vort_uz_tmp_2,
-                                    u_x_tor_2,  u_y_tor_2,  u_z_tor_2, full_vort_tor_r_2, source_data_2, Itime, Idepth, Ilat, Ilon,
+                                    u_x_tor_2,  u_y_tor_2,  u_z_tor_2, full_vort_tor_r_2, source_data, Itime, Idepth, Ilat, Ilon,
                                     LAT_lb, LAT_ub, scale, local_kernel);
 
                             ux_ux_tor_2.at(index) = uxux_tmp_2;
@@ -2016,7 +2014,7 @@ void filtering_helmholtz_error(
                             // pot
                             apply_filter_at_point_for_quadratics(
                                     uxux_tmp_2, uxuy_tmp_2, uxuz_tmp_2, uyuy_tmp_2, uyuz_tmp_2, uzuz_tmp_2, vort_ux_tmp_2, vort_uy_tmp_2, vort_uz_tmp_2,
-                                    u_x_pot_2,  u_y_pot_2,  u_z_pot_2, full_vort_pot_r_2, source_data_2, Itime, Idepth, Ilat, Ilon,
+                                    u_x_pot_2,  u_y_pot_2,  u_z_pot_2, full_vort_pot_r_2, source_data, Itime, Idepth, Ilat, Ilon,
                                     LAT_lb, LAT_ub, scale, local_kernel);
 
                             ux_ux_pot_2.at(index) = uxux_tmp_2;
@@ -2035,7 +2033,7 @@ void filtering_helmholtz_error(
                             // tot
                             apply_filter_at_point_for_quadratics(
                                     uxux_tmp_2, uxuy_tmp_2, uxuz_tmp_2, uyuy_tmp_2, uyuz_tmp_2, uzuz_tmp_2, vort_ux_tmp_2, vort_uy_tmp_2, vort_uz_tmp_2,
-                                    u_x_tot_2,  u_y_tot_2,  u_z_tot_2, full_vort_tot_r_2, source_data_2, Itime, Idepth, Ilat, Ilon,
+                                    u_x_tot_2,  u_y_tot_2,  u_z_tot_2, full_vort_tot_r_2, source_data, Itime, Idepth, Ilat, Ilon,
                                     LAT_lb, LAT_ub, scale, local_kernel);
 
                             ux_ux_tot_2.at(index) = uxux_tmp_2;
@@ -2168,16 +2166,6 @@ void filtering_helmholtz_error(
         potential_vel_from_F(u_lon_pot_2, u_lat_pot_2, coarse_F_pot_2, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
 
         toroidal_vel_from_F( u_lon_tor_error, u_lat_tor_error, coarse_F_tor_error, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
-        
-        // DEBUG: Right after toroidal_vel_from_F for error
-        if (wRank == 0) { 
-            fprintf(stdout, "DEBUG: After toroidal_vel_from_F(error)\n");
-            fprintf(stdout, "  coarse_F_tor_error[0] = %.15e\n", coarse_F_tor_error[0]);
-            fprintf(stdout, "  u_lon_tor_error[0] = %.15e, u_lon_tor_error[1] = %.15e\n", 
-                    u_lon_tor_error[0], u_lon_tor_error[1]);
-            fflush(stdout);
-        }
-        
         potential_vel_from_F(u_lon_pot_error, u_lat_pot_error, coarse_F_pot_error, longitude, latitude, Ntime, Ndepth, Nlat, Nlon, mask);
 
         #pragma omp parallel \
@@ -2209,9 +2197,9 @@ void filtering_helmholtz_error(
         vel_Spher_to_Cart( u_x_pot_coarse, u_y_pot_coarse, u_z_pot_coarse, u_r_coarse, u_lon_pot, u_lat_pot, source_data );
         vel_Spher_to_Cart( u_x_tot_coarse, u_y_tot_coarse, u_z_tot_coarse, u_r_coarse, u_lon_tot, u_lat_tot, source_data );
 
-        vel_Spher_to_Cart( u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, zero_array, u_lon_tor_2, u_lat_tor_2, source_data_2 );
-        vel_Spher_to_Cart( u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, u_r_coarse_2, u_lon_pot_2, u_lat_pot_2, source_data_2 );
-        vel_Spher_to_Cart( u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, u_r_coarse_2, u_lon_tot_2, u_lat_tot_2, source_data_2 );
+        vel_Spher_to_Cart( u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, zero_array, u_lon_tor_2, u_lat_tor_2, source_data );
+        vel_Spher_to_Cart( u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, u_r_coarse_2, u_lon_pot_2, u_lat_pot_2, source_data );
+        vel_Spher_to_Cart( u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, u_r_coarse_2, u_lon_tot_2, u_lat_tot_2, source_data );
 
         vel_Spher_to_Cart( u_x_tor_coarse_error, u_y_tor_coarse_error, u_z_tor_coarse_error, zero_array, u_lon_tor_error, u_lat_tor_error, source_data );
         vel_Spher_to_Cart( u_x_pot_coarse_error, u_y_pot_coarse_error, u_z_pot_coarse_error, u_r_coarse_error, u_lon_pot_error, u_lat_pot_error, source_data );
@@ -2237,7 +2225,7 @@ void filtering_helmholtz_error(
             write_field_to_output(u_lon_pot_2, "u_lon_pot_2", starts, counts, fname, &mask);
             write_field_to_output(u_lat_pot_2, "u_lat_pot_2", starts, counts, fname, &mask);
 
-            if ( source_data_2.compute_radial_vel ) {
+            if ( source_data.compute_radial_vel ) {
                 write_field_to_output(u_r_coarse_2, "u_r_2", starts, counts, fname, NULL);
             }
 
@@ -2274,7 +2262,7 @@ void filtering_helmholtz_error(
                 u_lat_tot_2, u_lat_tor_2, u_lat_pot_2,
                 dl_coarse_Phi_2, dl_coarse_Psi_2,
                 dll_coarse_Phi_2, dll_coarse_Psi_2,
-                source_data_2, scale
+                source_data, scale
                 );
 
         if (wRank == 0) { 
@@ -2349,7 +2337,7 @@ void filtering_helmholtz_error(
         // Get uiuj from corresponding Helmholtz
         if ( constants::COMP_PI_HELMHOLTZ ) {
             uiuj_from_Helmholtz( ulon_ulon, ulon_ulat, ulat_ulat, coarse_uiuj_F_r, coarse_uiuj_F_Phi, coarse_uiuj_F_Psi, source_data );
-            uiuj_from_Helmholtz( ulon_ulon_2, ulon_ulat_2, ulat_ulat_2, coarse_uiuj_F_r_2, coarse_uiuj_F_Phi_2, coarse_uiuj_F_Psi_2, source_data_2 );
+            uiuj_from_Helmholtz( ulon_ulon_2, ulon_ulat_2, ulat_ulat_2, coarse_uiuj_F_r_2, coarse_uiuj_F_Phi_2, coarse_uiuj_F_Psi_2, source_data );
 
             if (not(constants::MINIMAL_OUTPUT)) {
                 if (constants::DO_TIMING) { clock_on = MPI_Wtime(); }
@@ -2388,17 +2376,17 @@ void filtering_helmholtz_error(
         compute_vorticity(
                 vort_tor_r_2, null_vector, null_vector, div_tor_2, OkuboWeiss_tor_2, 
                 null_vector, null_vector, null_vector, null_vector,
-                source_data_2, zero_array, u_lon_tor_2, u_lat_tor_2);
+                source_data, zero_array, u_lon_tor_2, u_lat_tor_2);
 
         compute_vorticity(
                 vort_pot_r_2, null_vector, null_vector, div_pot_2, OkuboWeiss_pot_2,
                 null_vector, null_vector, null_vector, null_vector,
-                source_data_2, u_r_coarse_2, u_lon_pot_2, u_lat_pot_2);
+                source_data, u_r_coarse_2, u_lon_pot_2, u_lat_pot_2);
 
         compute_vorticity(
                 vort_tot_r_2, null_vector, null_vector, div_tot_2, OkuboWeiss_tot_2,
                 null_vector, null_vector, null_vector, null_vector,
-                source_data_2, u_r_coarse_2, u_lon_tot_2, u_lat_tot_2);
+                source_data, u_r_coarse_2, u_lon_tot_2, u_lat_tot_2);
 
         // Error
 
@@ -2483,10 +2471,10 @@ void filtering_helmholtz_error(
                         vort_tor_r, vort_ux_tor, vort_uy_tor, vort_uz_tor );
 
             // Field 2
-            compute_Pi( Pi_tor_2, source_data_2, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+            compute_Pi( Pi_tor_2, source_data, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
                         ux_ux_tor_2, ux_uy_tor_2, ux_uz_tor_2, uy_uy_tor_2, uy_uz_tor_2, uz_uz_tor_2 );
 
-            compute_Z(  Z_tor_2, source_data_2, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+            compute_Z(  Z_tor_2, source_data, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
                         vort_tor_r_2, vort_ux_tor_2, vort_uy_tor_2, vort_uz_tor_2 );
 
             // Error
@@ -2516,18 +2504,6 @@ void filtering_helmholtz_error(
             source_data.gather_variable_across_depth( uy_uz_tor, uy_uz_DEPTH );
             source_data.gather_variable_across_depth( uz_uz_tor, uz_uz_DEPTH );
 
-            // Field 2
-
-            source_data_2.gather_variable_across_depth( u_x_tor_coarse_2, u_x_coarse_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( u_y_tor_coarse_2, u_y_coarse_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( u_z_tor_coarse_2, u_z_coarse_DEPTH_2 );
-
-            source_data_2.gather_variable_across_depth( ux_ux_tor_2, ux_ux_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( ux_uy_tor_2, ux_uy_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( ux_uz_tor_2, ux_uz_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( uy_uy_tor_2, uy_uy_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( uy_uz_tor_2, uy_uz_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( uz_uz_tor_2, uz_uz_DEPTH_2 );
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "MPI_COMM_depth_merging"); }
             if (wRank == 0) { fprintf( stdout, "Merged variables across depth.\n" ); fflush(stdout); }
         }
@@ -2536,14 +2512,14 @@ void filtering_helmholtz_error(
                 compute_div_transport( div_J_tor, source_data, u_x_coarse_DEPTH, u_y_coarse_DEPTH, u_z_coarse_DEPTH, 
                                        ux_ux_DEPTH, ux_uy_DEPTH, ux_uz_DEPTH, uy_uy_DEPTH, uy_uz_DEPTH, uz_uz_DEPTH, 
                                        zero_array);
-                compute_div_transport( div_J_tor_2, source_data_2, u_x_coarse_DEPTH_2, u_y_coarse_DEPTH_2, u_z_coarse_DEPTH_2, 
+                compute_div_transport( div_J_tor_2, source_data, u_x_coarse_DEPTH_2, u_y_coarse_DEPTH_2, u_z_coarse_DEPTH_2, 
                                        ux_ux_DEPTH_2, ux_uy_DEPTH_2, ux_uz_DEPTH_2, uy_uy_DEPTH_2, uy_uz_DEPTH_2, uz_uz_DEPTH_2, 
                                        zero_array);                                      
             } else {
                 compute_div_transport( div_J_tor, source_data, u_x_tor_coarse, u_y_tor_coarse, u_z_tor_coarse, 
                                        ux_ux_tor, ux_uy_tor, ux_uz_tor, uy_uy_tor, uy_uz_tor, uz_uz_tor, 
                                        zero_array);
-                compute_div_transport( div_J_tor_2, source_data_2, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+                compute_div_transport( div_J_tor_2, source_data, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
                                        ux_ux_tor_2, ux_uy_tor_2, ux_uz_tor_2, uy_uy_tor_2, uy_uz_tor_2, uz_uz_tor_2, 
                                        zero_array);
             }
@@ -2565,11 +2541,11 @@ void filtering_helmholtz_error(
             // Field 2
 
             // Energy cascade (Pi)
-            compute_Pi( Pi_pot_2, source_data_2, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+            compute_Pi( Pi_pot_2, source_data, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
                         ux_ux_pot_2, ux_uy_pot_2, ux_uz_pot_2, uy_uy_pot_2, uy_uz_pot_2, uz_uz_pot_2 );
 
             // Enstrophy cascade (Z)
-            compute_Z(  Z_pot_2, source_data_2, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+            compute_Z(  Z_pot_2, source_data, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
                         vort_pot_r_2, vort_ux_pot_2, vort_uy_pot_2, vort_uz_pot_2 );
 
             // Error
@@ -2598,18 +2574,6 @@ void filtering_helmholtz_error(
             source_data.gather_variable_across_depth( uy_uz_pot, uy_uz_DEPTH );
             source_data.gather_variable_across_depth( uz_uz_pot, uz_uz_DEPTH );
             
-            // Field 2
-
-            source_data_2.gather_variable_across_depth( u_x_pot_coarse_2, u_x_coarse_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( u_y_pot_coarse_2, u_y_coarse_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( u_z_pot_coarse_2, u_z_coarse_DEPTH_2 );
-
-            source_data_2.gather_variable_across_depth( ux_ux_pot_2, ux_ux_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( ux_uy_pot_2, ux_uy_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( ux_uz_pot_2, ux_uz_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( uy_uy_pot_2, uy_uy_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( uy_uz_pot_2, uy_uz_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( uz_uz_pot_2, uz_uz_DEPTH_2 );
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "MPI_COMM_depth_merging"); }
         }
         if (constants::DO_TIMING) { clock_on = MPI_Wtime(); }
@@ -2617,14 +2581,14 @@ void filtering_helmholtz_error(
                 compute_div_transport( div_J_pot, source_data, u_x_coarse_DEPTH, u_y_coarse_DEPTH, u_z_coarse_DEPTH, 
                                        ux_ux_DEPTH, ux_uy_DEPTH, ux_uz_DEPTH, uy_uy_DEPTH, uy_uz_DEPTH, uz_uz_DEPTH, 
                                        zero_array);
-                compute_div_transport( div_J_pot_2, source_data_2, u_x_coarse_DEPTH_2, u_y_coarse_DEPTH_2, u_z_coarse_DEPTH_2, 
+                compute_div_transport( div_J_pot_2, source_data, u_x_coarse_DEPTH_2, u_y_coarse_DEPTH_2, u_z_coarse_DEPTH_2, 
                                        ux_ux_DEPTH_2, ux_uy_DEPTH_2, ux_uz_DEPTH_2, uy_uy_DEPTH_2, uy_uz_DEPTH_2, uz_uz_DEPTH_2, 
                                        zero_array);
             } else {
                 compute_div_transport( div_J_pot, source_data, u_x_pot_coarse, u_y_pot_coarse, u_z_pot_coarse, 
                                        ux_ux_pot, ux_uy_pot, ux_uz_pot, uy_uy_pot, uy_uz_pot, uz_uz_pot, 
                                        zero_array);
-                compute_div_transport( div_J_pot_2, source_data_2, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+                compute_div_transport( div_J_pot_2, source_data, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
                                        ux_ux_pot_2, ux_uy_pot_2, ux_uz_pot_2, uy_uy_pot_2, uy_uz_pot_2, uz_uz_pot_2, 
                                        zero_array);
             }
@@ -2646,11 +2610,11 @@ void filtering_helmholtz_error(
             // Field 2
                     
             // Energy cascade (Pi)
-            compute_Pi( Pi_tot_2, source_data_2, u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
+            compute_Pi( Pi_tot_2, source_data, u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
                         ux_ux_tot_2, ux_uy_tot_2, ux_uz_tot_2, uy_uy_tot_2, uy_uz_tot_2, uz_uz_tot_2 );
 
             // Enstrophy cascade (Z)
-            compute_Z(  Z_tot_2, source_data_2, u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
+            compute_Z(  Z_tot_2, source_data, u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
                         vort_tot_r_2, vort_ux_tot_2, vort_uy_tot_2, vort_uz_tot_2 );
 
             // Error
@@ -2680,17 +2644,6 @@ void filtering_helmholtz_error(
             source_data.gather_variable_across_depth( uy_uz_tot, uy_uz_DEPTH );
             source_data.gather_variable_across_depth( uz_uz_tot, uz_uz_DEPTH );
 
-            // Field 2
-            source_data_2.gather_variable_across_depth( u_x_tot_coarse_2, u_x_coarse_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( u_y_tot_coarse_2, u_y_coarse_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( u_z_tot_coarse_2, u_z_coarse_DEPTH_2 );
-
-            source_data_2.gather_variable_across_depth( ux_ux_tot_2, ux_ux_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( ux_uy_tot_2, ux_uy_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( ux_uz_tot_2, ux_uz_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( uy_uy_tot_2, uy_uy_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( uy_uz_tot_2, uy_uz_DEPTH_2 );
-            source_data_2.gather_variable_across_depth( uz_uz_tot_2, uz_uz_DEPTH_2 );
             if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "MPI_COMM_depth_merging"); }
         }
         if (constants::DO_TIMING) { clock_on = MPI_Wtime(); }
@@ -2698,14 +2651,14 @@ void filtering_helmholtz_error(
                 compute_div_transport( div_J_tot, source_data, u_x_coarse_DEPTH, u_y_coarse_DEPTH, u_z_coarse_DEPTH, 
                                        ux_ux_DEPTH, ux_uy_DEPTH, ux_uz_DEPTH, uy_uy_DEPTH, uy_uz_DEPTH, uz_uz_DEPTH, 
                                        zero_array);
-                compute_div_transport( div_J_tot_2, source_data_2, u_x_coarse_DEPTH_2, u_y_coarse_DEPTH_2, u_z_coarse_DEPTH_2, 
+                compute_div_transport( div_J_tot_2, source_data, u_x_coarse_DEPTH_2, u_y_coarse_DEPTH_2, u_z_coarse_DEPTH_2, 
                                        ux_ux_DEPTH_2, ux_uy_DEPTH_2, ux_uz_DEPTH_2, uy_uy_DEPTH_2, uy_uz_DEPTH_2, uz_uz_DEPTH_2, 
                                        zero_array);
             } else {
                 compute_div_transport( div_J_tot, source_data, u_x_tot_coarse, u_y_tot_coarse, u_z_tot_coarse, 
                                        ux_ux_tot, ux_uy_tot, ux_uz_tot, uy_uy_tot, uy_uz_tot, uz_uz_tot, 
                                        zero_array);
-                compute_div_transport( div_J_tot_2, source_data_2, u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
+                compute_div_transport( div_J_tot_2, source_data, u_x_tot_coarse_2, u_y_tot_coarse_2, u_z_tot_coarse_2, 
                                        ux_ux_tot_2, ux_uy_tot_2, ux_uz_tot_2, uy_uy_tot_2, uy_uz_tot_2, uz_uz_tot_2, 
                                        zero_array);
             }
@@ -2731,17 +2684,17 @@ void filtering_helmholtz_error(
                 &u_x_tot_coarse, &u_y_tot_coarse, &u_z_tot_coarse );
 
         // Field 2
-        compute_Pi( Pi_DVV_2, source_data_2, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+        compute_Pi( Pi_DVV_2, source_data, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
                 ux_ux_tor_2, ux_uy_tor_2, ux_uz_tor_2, uy_uy_tor_2, uy_uz_tor_2, uz_uz_tor_2,
                 &u_x_tor_coarse_2, &u_y_tor_coarse_2, &u_z_tor_coarse_2 );
-        compute_Pi( Pi_DTT_2, source_data_2, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
+        compute_Pi( Pi_DTT_2, source_data, u_x_pot_coarse_2, u_y_pot_coarse_2, u_z_pot_coarse_2, 
                 ux_ux_tot_2, ux_uy_tot_2, ux_uz_tot_2, uy_uy_tot_2, uy_uz_tot_2, uz_uz_tot_2,
                 &u_x_tot_coarse_2, &u_y_tot_coarse_2, &u_z_tot_coarse_2 );
 
-        compute_Pi( Pi_VDD_2, source_data_2, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+        compute_Pi( Pi_VDD_2, source_data, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
                 ux_ux_pot_2, ux_uy_pot_2, ux_uz_pot_2, uy_uy_pot_2, uy_uz_pot_2, uz_uz_pot_2,
                 &u_x_pot_coarse_2, &u_y_pot_coarse_2, &u_z_pot_coarse_2 );
-        compute_Pi( Pi_VTT_2, source_data_2, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
+        compute_Pi( Pi_VTT_2, source_data, u_x_tor_coarse_2, u_y_tor_coarse_2, u_z_tor_coarse_2, 
                 ux_ux_tot_2, ux_uy_tot_2, ux_uz_tot_2, uy_uy_tot_2, uy_uz_tot_2, uz_uz_tot_2,
                 &u_x_tot_coarse_2, &u_y_tot_coarse_2, &u_z_tot_coarse_2 );
         if (constants::DO_TIMING) { timing_records.add_to_record(MPI_Wtime() - clock_on, "compute_Pi_and_Z"); }
@@ -2752,7 +2705,7 @@ void filtering_helmholtz_error(
         //
         if ( constants::COMP_PI_HELMHOLTZ ) {
             compute_Pi_Helmholtz( Pi_Helm, source_data, u_lon_tot, u_lat_tot, ulon_ulon, ulon_ulat, ulat_ulat );
-            compute_Pi_Helmholtz( Pi_Helm_2, source_data_2, u_lon_tot_2, u_lat_tot_2, ulon_ulon_2, ulon_ulat_2, ulat_ulat_2 );
+            compute_Pi_Helmholtz( Pi_Helm_2, source_data, u_lon_tot_2, u_lat_tot_2, ulon_ulon_2, ulon_ulat_2, ulat_ulat_2 );
             compute_Pi_Helmholtz_error( Pi_Helm_error, source_data, u_lon_tot, u_lat_tot, ulon_ulon, ulon_ulat, ulat_ulat,
                                         u_lon_tot_2, u_lat_tot_2, ulon_ulon_2, ulon_ulat_2, ulat_ulat_2 );
         }
@@ -2823,13 +2776,6 @@ void filtering_helmholtz_error(
                     KE_pot_coarse_2.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_pot_2.at(index), 2.) + pow(u_lat_pot_2.at(index), 2.) );
                     KE_tot_coarse_2.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tot_2.at(index), 2.) + pow(u_lat_tot_2.at(index), 2.) );
 
-                    // DEBUG: Before KE_error computation
-                    if (index < 2 && wRank == 0) {
-                        fprintf(stdout, "DEBUG: Before KE_error compute at index %d\n", index);
-                        fprintf(stdout, "  u_lon_tor_error[%d] = %.15e, u_lat_tor_error[%d] = %.15e\n", 
-                                index, u_lon_tor_error.at(index), index, u_lat_tor_error.at(index));
-                    }
-                    
                     KE_tor_coarse_error.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tor_error.at(index), 2.) + pow(u_lat_tor_error.at(index), 2.) );
                     KE_pot_coarse_error.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_pot_error.at(index), 2.) + pow(u_lat_pot_error.at(index), 2.) );
                     KE_tot_coarse_error.at(index) = 0.5 * constants::rho0 * ( pow(u_lon_tot_error.at(index), 2.) + pow(u_lat_tot_error.at(index), 2.) );

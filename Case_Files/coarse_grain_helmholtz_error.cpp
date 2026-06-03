@@ -95,9 +95,12 @@ int main(int argc, char *argv[]) {
                                                                    "helmholtz_projection_uiuj.nc", 
                                                                    asked_help,
                                                                    "netCDF file containing Helmholtz components of u*u tensor")
-                                                : "";
-                                                                                        "netCDF file containing velocity field (only used to get land mask)"),
-                        &u_r_input_fname_2   = input.getCmdOption("--radial_velocity_input_file_2", 
+                                                : "",
+                        &vel_input_fname_2   = input.getCmdOption("--velocity_input_file_2",
+                                                                "vels_2.nc",
+                                                                asked_help,
+                                                                "netCDF file containing velocity field (only used to get land mask)"),
+                        &u_r_input_fname_2   = input.getCmdOption("--radial_velocity_input_file_2",
                                                                 "NONE",                         
                                                                 asked_help,
                                                                 "netCDF file containing radial/vertical velocity for second file, if applicable. \nNONE if no radial velocity."),

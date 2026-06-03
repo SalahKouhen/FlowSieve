@@ -1668,8 +1668,7 @@ void filtering_helmholtz_error(
                 vort_ux_tor_error, vort_uy_tor_error, vort_uz_tor_error, \
                 vort_ux_pot_error, vort_uy_pot_error, vort_uz_pot_error, \
                 vort_ux_tot_error, vort_uy_tot_error, vort_uz_tot_error, \
-                KE_tor_filt_error, KE_pot_filt_error, KE_tot_filt_error, \
-                local_kernel, local_dl_kernel, local_dll_kernel \
+                KE_tor_filt_error, KE_pot_filt_error, KE_tot_filt_error \
                 ) \
         private(Itime, Idepth, Ilat, Ilon, index, prev_Ilat, Ilatlon, \
                 F_tor_tmp, F_pot_tmp, u_r_tmp, uxux_tmp, uxuy_tmp, uxuz_tmp, uyuy_tmp, uyuz_tmp, uzuz_tmp, \
@@ -1689,7 +1688,8 @@ void filtering_helmholtz_error(
                 filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error \
                 ) \
         firstprivate(perc, wRank, \
-                perc_count, Nlon, Nlat, Ndepth, Ntime )
+                perc_count, Nlon, Nlat, Ndepth, Ntime, \
+                local_kernel, local_dl_kernel, local_dll_kernel )
         {
             // Debug: start of parallel region
             fprintf(stderr, "[DEBUG Thread %d] Entered parallel region\n", omp_get_thread_num());

@@ -279,7 +279,7 @@ int main(int argc, char *argv[]) {
         source_data.compute_radial_vel = true;
     }
 
-    if ( u_r_input_fname == "NONE" ) {
+    if ( u_r_input_fname_2 == "NONE" ) {
         // If no u_r provided, just assume it's zero
         source_data.variables["u_r_2"] = std::vector<double>( source_data.variables["F_potential_2"].size(), 0. );
         source_data.compute_radial_vel = false;

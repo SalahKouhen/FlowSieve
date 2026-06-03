@@ -1894,15 +1894,22 @@ void filtering_helmholtz_error(
 
 
 
-                        // Phi
-                        coarse_F_pot_error.at(index) = F_pot_tmp - F_pot_tmp_2;
-                        dl_coarse_Phi_error.at(index) = dPhi - dPhi_2;
-                        dll_coarse_Phi_error.at(index) = ddPhi - ddPhi_2;
+                        // Phi — use the already-filtered error field directly.
+                        // F_potential_error is an exact pre-loop subtraction, so F_pot_tmp_error
+                        // equals zero when both inputs are identical, regardless of which kernel
+                        // happened to be in local_kernel at call time (race-condition-safe).
+                        coarse_F_pot_error.at(index) = F_pot_tmp_error;
+                        double dPhi_err = (dl_Phi_tmp_error - F_pot_tmp_error) * dl_kernel_val;
+                        dl_coarse_Phi_error.at(index) = dPhi_err;
+                        double ddPhi_err = ( dll_Phi_tmp_error - F_pot_tmp_error ) * dll_kernel_val - 2 * dPhi_err * dl_kernel_val;
+                        dll_coarse_Phi_error.at(index) = ddPhi_err;
 
                         // Psi
-                        coarse_F_tor_error.at(index) = F_tor_tmp - F_tor_tmp_2;
-                        dl_coarse_Psi_error.at(index) = dPsi - dPsi_2;
-                        dll_coarse_Psi_error.at(index) = ddPsi - ddPsi_2;
+                        coarse_F_tor_error.at(index) = F_tor_tmp_error;
+                        double dPsi_err = (dl_Psi_tmp_error - F_tor_tmp_error) * dl_kernel_val;
+                        dl_coarse_Psi_error.at(index) = dPsi_err;
+                        double ddPsi_err = ( dll_Psi_tmp_error - F_tor_tmp_error ) * dll_kernel_val - 2 * dPsi_err * dl_kernel_val;
+                        dll_coarse_Psi_error.at(index) = ddPsi_err;
 
                         // u_r
                         if ( source_data.compute_radial_vel ) {
@@ -1919,9 +1926,11 @@ void filtering_helmholtz_error(
                             double ddu_r_2 = ( dll_ur_tmp_2 - u_r_tmp_2 ) * dll_kernel_val - 2 * du_r_2 * dl_kernel_val;
                             dll_coarse_u_r_2.at(index) = ddu_r_2;
 
-                            u_r_coarse_error.at(index) = u_r_tmp - u_r_tmp_2;
-                            dl_coarse_u_r_error.at(index) = du_r - du_r_2;
-                            dll_coarse_u_r_error.at(index) = ddu_r - ddu_r_2;
+                            u_r_coarse_error.at(index) = u_r_tmp_error;
+                            double du_r_err = (dl_ur_tmp_error - u_r_tmp_error) * dl_kernel_val;
+                            dl_coarse_u_r_error.at(index) = du_r_err;
+                            double ddu_r_err = ( dll_ur_tmp_error - u_r_tmp_error ) * dll_kernel_val - 2 * du_r_err * dl_kernel_val;
+                            dll_coarse_u_r_error.at(index) = ddu_r_err;
                         }
 
                         if ( mask.at(index) ) {

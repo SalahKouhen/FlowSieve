@@ -1685,7 +1685,8 @@ void filtering_helmholtz_error(
                 dl_Psi_tmp_error, dll_Psi_tmp_error, dl_Phi_tmp_error, dll_Phi_tmp_error, dl_ur_tmp_error, dll_ur_tmp_error, \
                 filtered_vals, dl_filter_vals, dll_filter_vals, \
                 filtered_vals_2, dl_filter_vals_2, dll_filter_vals_2, \
-                filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error \
+                filtered_vals_error, dl_filter_vals_error, dll_filter_vals_error, \
+                uiuj_F_r_tmp, uiuj_F_Phi_tmp, uiuj_F_Psi_tmp, uiuj_F_r_tmp_2, uiuj_F_Phi_tmp_2, uiuj_F_Psi_tmp_2 \
                 ) \
         firstprivate(perc, wRank, \
                 perc_count, Nlon, Nlat, Ndepth, Ntime, \
